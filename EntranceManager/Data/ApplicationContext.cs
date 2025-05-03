@@ -4,9 +4,9 @@ using Microsoft.EntityFrameworkCore;
 namespace EntranceManager.Data
 {
 
-    public class ApplicationDbContext : DbContext
+    public class ApplicationContext : DbContext
     {
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
+        public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options) { }
 
         public DbSet<User> Users { get; set; }

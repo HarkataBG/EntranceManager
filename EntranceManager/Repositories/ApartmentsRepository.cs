@@ -1,6 +1,73 @@
-﻿namespace EntranceManager.Repositories
+﻿using EntranceManager.Models;
+using EntranceManager.Data;
+using Microsoft.EntityFrameworkCore;
+
+namespace EntranceManager.Repositories
 {
-    public class ApartmentsRepository
+    public class ApartmentRepository : IApartmentRepository
     {
+        private readonly ApplicationContext _dbContext;
+
+        public ApartmentRepository(ApplicationContext dbContext)
+        {
+            _dbContext = dbContext;
+        }
+
+        // Извлича всички апартаменти
+        public async Task<IEnumerable<Apartment>> GetAllAsync()
+        {
+            return await _dbContext.Apartments.ToListAsync();
+        }
+
+        // Извлича апартамент по ID
+        public async Task<Apartment> GetByIdAsync(int id)
+        {
+            return await _dbContext.Apartments
+                .Include(a => a.ApartmentFees) // Зареждаме всички такси на апартамента
+                .ThenInclude(af => af.Fee)   // Зареждаме самите такси
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        // Добавя нов апартамент
+        public async Task AddAsync(Apartment apartment)
+        {
+            await _dbContext.Apartments.AddAsync(apartment);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        // Актуализира съществуващ апартамент
+        public async Task UpdateAsync(Apartment apartment)
+        {
+            _dbContext.Apartments.Update(apartment);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        // Изтрива апартамент по ID
+        public async Task DeleteAsync(int id)
+        {
+            var apartment = await _dbContext.Apartments.FindAsync(id);
+            if (apartment != null)
+            {
+                _dbContext.Apartments.Remove(apartment);
+                await _dbContext.SaveChangesAsync();
+            }
+        }
+
+        // Получава апартаментите на даден собственик
+        public async Task<IEnumerable<Apartment>> GetApartmentsByOwnerAsync(int ownerUserId)
+        {
+            return await _dbContext.Apartments
+                .Where(a => a.OwnerUserId == ownerUserId)
+                .ToListAsync();
+        }
+
+        // Получава апартамент със свързаните такси
+        public async Task<Apartment> GetApartmentWithFeesAsync(int id)
+        {
+            return await _dbContext.Apartments
+                .Include(a => a.ApartmentFees)
+                .ThenInclude(af => af.Fee)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
     }
 }
