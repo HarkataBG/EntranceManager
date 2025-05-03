@@ -1,0 +1,14 @@
+﻿namespace EntranceManager.Models
+{
+    public class Entrance
+    {
+        public int Id { get; set; }
+        public string City { get; set; }
+        public string Address { get; set; }
+        public int PostCode { get; set; }
+        public string EntranceSymbol {  get; set; }
+        public int ManagerUserId { get; set; }
+        public User ManagerUser { get; set; }
+        public ICollection<Apartment> Apartments { get; set; }
+    }
+}
