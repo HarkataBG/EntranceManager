@@ -6,6 +6,7 @@ namespace EntranceManager.Services
     public class ApartmentService : IApartmentService
     {
         private readonly IApartmentRepository _apartmentRepository;
+        private readonly IEntranceRepository _entranceRepository;
 
         public ApartmentService(IApartmentRepository apartmentRepository)
         {
@@ -24,6 +25,9 @@ namespace EntranceManager.Services
 
         public async Task AddApartmentAsync(Apartment apartment)
         {
+            if (_entranceRepository.GetByIdAsync(apartment.EntranceId) == null)
+                throw new Exception();
+
             await _apartmentRepository.AddAsync(apartment);
         }
 

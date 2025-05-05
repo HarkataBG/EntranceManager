@@ -1,4 +1,6 @@
-﻿using EntranceManager.Models;
+﻿using AspNetCoreDemo.Helpers;
+using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using EntranceManager.Services;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +12,12 @@ namespace EntranceManager.Controllers.Api
     {
         private readonly IApartmentService _apartmentService;
 
-        public ApartmentsController(IApartmentService apartmentService)
+        private readonly ModelMapper _modelMapper;
+
+        public ApartmentsController(IApartmentService apartmentService, ModelMapper modelMapper)
         {
             _apartmentService = apartmentService;
+            _modelMapper = modelMapper;
         }
 
         [HttpGet]
@@ -31,10 +36,15 @@ namespace EntranceManager.Controllers.Api
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(Apartment apartment)
+        public async Task<IActionResult> CreateApartment([FromBody] ApartmentDto dto)
         {
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            Apartment apartment = _modelMapper.Map(dto);
             await _apartmentService.AddApartmentAsync(apartment);
-            return CreatedAtAction(nameof(GetById), new { id = apartment.Id }, apartment);
+
+            return Ok(apartment);
         }
 
         [HttpPut("{id}")]
