@@ -13,13 +13,11 @@ namespace EntranceManager.Repositories
             _dbContext = dbContext;
         }
 
-        // Извлича всички апартаменти
         public async Task<IEnumerable<Apartment>> GetAllAsync()
         {
             return await _dbContext.Apartments.ToListAsync();
         }
 
-        // Извлича апартамент по ID
         public async Task<Apartment> GetByIdAsync(int id)
         {
             return await _dbContext.Apartments
@@ -28,21 +26,18 @@ namespace EntranceManager.Repositories
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
-        // Добавя нов апартамент
         public async Task AddAsync(Apartment apartment)
         {
             await _dbContext.Apartments.AddAsync(apartment);
             await _dbContext.SaveChangesAsync();
         }
 
-        // Актуализира съществуващ апартамент
         public async Task UpdateAsync(Apartment apartment)
         {
             _dbContext.Apartments.Update(apartment);
             await _dbContext.SaveChangesAsync();
         }
 
-        // Изтрива апартамент по ID
         public async Task DeleteAsync(int id)
         {
             var apartment = await _dbContext.Apartments.FindAsync(id);
@@ -53,7 +48,6 @@ namespace EntranceManager.Repositories
             }
         }
 
-        // Получава апартаментите на даден собственик
         public async Task<IEnumerable<Apartment>> GetApartmentsByOwnerAsync(int ownerUserId)
         {
             return await _dbContext.Apartments
@@ -61,7 +55,6 @@ namespace EntranceManager.Repositories
                 .ToListAsync();
         }
 
-        // Получава апартамент със свързаните такси
         public async Task<Apartment> GetApartmentWithFeesAsync(int id)
         {
             return await _dbContext.Apartments

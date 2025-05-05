@@ -1,4 +1,6 @@
 using EntranceManager.Data;
+using EntranceManager.Repositories;
+using EntranceManager.Services;
 using Microsoft.EntityFrameworkCore;
 
 namespace EntranceManager
@@ -12,7 +14,17 @@ namespace EntranceManager
             builder.Services.AddDbContext<ApplicationContext>(options =>
                 options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+            builder.Services.AddControllers();
+
             builder.Services.AddControllersWithViews();
+
+            //Repositories
+            builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
+            builder.Services.AddScoped<IEntranceRepository, EntranceRepository>();
+
+            //Services
+            builder.Services.AddScoped<IApartmentService, ApartmentService>();
+            builder.Services.AddScoped<IEntranceService, EntranceService>();
 
             var app = builder.Build();
 
