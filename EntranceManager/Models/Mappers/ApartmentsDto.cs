@@ -6,6 +6,5 @@
         public int Number { get; set; }
         public int OwnerUserId { get; set; }
         public int EntranceId { get; set; }
-
     }
 }

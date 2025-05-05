@@ -21,6 +21,7 @@ namespace EntranceManager
             //Repositories
             builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
             builder.Services.AddScoped<IEntranceRepository, EntranceRepository>();
+            builder.Services.AddScoped<IUserRepository, UserRepository>();
 
             //Services
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
