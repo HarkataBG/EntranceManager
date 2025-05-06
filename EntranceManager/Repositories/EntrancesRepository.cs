@@ -21,7 +21,6 @@ namespace EntranceManager.Repositories
         public async Task<Entrance?> GetByIdAsync(int id)
         {
             return await _context.Entrances
-                .Include(e => e.Apartments) 
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 

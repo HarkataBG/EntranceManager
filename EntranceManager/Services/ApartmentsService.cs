@@ -28,10 +28,12 @@ namespace EntranceManager.Services
 
         public async Task AddApartmentAsync(Apartment apartment)
         {
-            if (_userRepository.GetByIdAsync(apartment.Id) == null)
+            var owner = await _userRepository.GetByIdAsync(apartment.Id);
+            if (owner == null)
                 throw new Exception();
 
-            if (_entranceRepository.GetByIdAsync(apartment.EntranceId) == null)
+            var entrance = await _entranceRepository.GetByIdAsync(apartment.EntranceId);
+            if (entrance == null)
                 throw new Exception();
 
             await _apartmentRepository.AddAsync(apartment);

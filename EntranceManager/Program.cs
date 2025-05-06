@@ -1,3 +1,4 @@
+using AspNetCoreDemo.Helpers;
 using EntranceManager.Data;
 using EntranceManager.Repositories;
 using EntranceManager.Services;
@@ -26,6 +27,9 @@ namespace EntranceManager
             //Services
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
             builder.Services.AddScoped<IEntranceService, EntranceService>();
+
+            //Helpers
+            builder.Services.AddScoped<ModelMapper>();
 
             var app = builder.Build();
 
