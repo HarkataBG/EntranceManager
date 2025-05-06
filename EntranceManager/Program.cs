@@ -2,7 +2,11 @@ using AspNetCoreDemo.Helpers;
 using EntranceManager.Data;
 using EntranceManager.Repositories;
 using EntranceManager.Services;
+using EntranceManager.Services.Contracts;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.Text;
 
 namespace EntranceManager
 {
@@ -19,6 +23,32 @@ namespace EntranceManager
 
             builder.Services.AddControllersWithViews();
 
+            var key = builder.Configuration.GetSection("JwtSettings")["Key"];
+
+            if (key == null)
+                key = "123456";
+
+            builder.Services.AddAuthentication(options =>
+            {
+                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+            })
+            .AddJwtBearer(options =>
+            {
+                options.TokenValidationParameters = new TokenValidationParameters
+                {
+                    ValidateIssuer = true,
+                    ValidateAudience = true,
+                    ValidateLifetime = true,
+                    ValidateIssuerSigningKey = true,
+                    ValidIssuer = "EntranceManager",
+                    ValidAudience = "EntranceManager",
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                };
+            });
+
+            builder.Services.AddAuthorization();
+
             //Repositories
             builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
             builder.Services.AddScoped<IEntranceRepository, EntranceRepository>();
@@ -27,9 +57,11 @@ namespace EntranceManager
             //Services
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
             builder.Services.AddScoped<IEntranceService, EntranceService>();
+            builder.Services.AddScoped<IAuthService, AuthService>();
 
             //Helpers
             builder.Services.AddScoped<ModelMapper>();
+
 
             var app = builder.Build();
 
@@ -44,6 +76,8 @@ namespace EntranceManager
             app.UseStaticFiles();
 
             app.UseRouting();
+
+            app.UseAuthentication();
 
             app.UseAuthorization();
 
