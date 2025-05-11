@@ -58,6 +58,7 @@ namespace EntranceManager
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
             builder.Services.AddScoped<IEntranceService, EntranceService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
+            builder.Services.AddScoped<IUsersService, UsersService>();
 
             //Helpers
             builder.Services.AddScoped<ModelMapper>();
