@@ -1,9 +1,10 @@
 ﻿using EntranceManager.Models;
 using EntranceManager.Repositories;
+using EntranceManager.Services.Contracts;
 
 namespace EntranceManager.Services
 {
-    public class UsersService
+    public class UsersService : IUsersService
     {
         private readonly IUserRepository _userRepository;
         private readonly IEntranceRepository _entranceRepository;
@@ -28,7 +29,7 @@ namespace EntranceManager.Services
             {
                 throw new Exception("User does not belong to the specified entrance.");
             }
-            user.Role = "Manager"; // Или друга стойност според бизнес логиката
+            user.Role = "EntranceManager"; 
             await _userRepository.UpdateAsync(user);
         }
     }
