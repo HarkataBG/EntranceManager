@@ -42,7 +42,7 @@ namespace EntranceManager
                     ValidateLifetime = true,
                     ValidateIssuerSigningKey = true,
                     ValidIssuer = "EntranceManager",
-                    ValidAudience = "EntranceManager",
+                    ValidAudience = "EntranceUsers",
                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
                 };
             });
