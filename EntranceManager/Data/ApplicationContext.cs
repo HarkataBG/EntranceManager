@@ -24,7 +24,7 @@ namespace EntranceManager.Data
 
             modelBuilder.Entity<Apartment>()
                .HasOne(a => a.OwnerUser)
-               .WithMany(u => u.Apartments)
+               .WithMany(u => u.OwnedApartments)
                .HasForeignKey(a => a.OwnerUserId)
                .OnDelete(DeleteBehavior.Restrict);
 
@@ -39,6 +39,32 @@ namespace EntranceManager.Data
                 .WithMany(a => a.ApartmentFees)
                 .HasForeignKey(af => af.ApartmentId)
                 .OnDelete(DeleteBehavior.NoAction);
+
+            modelBuilder.Entity<ApartmentUser>()
+                .HasKey(au => new { au.UserId, au.ApartmentId });
+
+            modelBuilder.Entity<ApartmentUser>()
+                .HasOne(au => au.User)
+                .WithMany(u => u.ApartmentUsers)
+                .HasForeignKey(au => au.UserId);
+
+            modelBuilder.Entity<ApartmentUser>()
+                .HasOne(au => au.Apartment)
+                .WithMany(a => a.ApartmentUsers)
+                .HasForeignKey(au => au.ApartmentId);
+
+            modelBuilder.Entity<EntranceUser>()
+                .HasKey(eu => new { eu.UserId, eu.EntranceId });
+
+            modelBuilder.Entity<EntranceUser>()
+                .HasOne(eu => eu.User)
+                .WithMany(u => u.EntranceUsers)
+                .HasForeignKey(eu => eu.UserId);
+
+            modelBuilder.Entity<EntranceUser>()
+                .HasOne(eu => eu.Entrance)
+                .WithMany(e => e.EntranceUsers)
+                .HasForeignKey(eu => eu.EntranceId);
         }
     }
 }

@@ -11,5 +11,7 @@
         public int EntranceId { get; set; }
         public Entrance Entrance { get; set; }
         public ICollection<ApartmentFee> ApartmentFees { get; set; }
+
+        public ICollection<ApartmentUser> ApartmentUsers { get; set; }
     }
 }
