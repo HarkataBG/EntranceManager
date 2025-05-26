@@ -13,12 +13,18 @@ public class UserRepository : IUserRepository
 
     public async Task<User?> GetByIdAsync(int id)
     {
-        return await _context.Users.FindAsync(id);
+        return await _context.Users
+            .Include(u => u.EntranceUsers)
+            .FirstOrDefaultAsync(u => u.Id == id);
     }
 
     public async Task<User?> GetByUsernameAsync(string username)
     {
         return await _context.Users
+            .Include(u => u.OwnedApartments)
+            .Include(u => u.ApartmentUsers)
+            .Include(u => u.ManagedEntrances)
+            .Include(u => u.EntranceUsers)
             .FirstOrDefaultAsync(u => u.Username == username);
     }
 

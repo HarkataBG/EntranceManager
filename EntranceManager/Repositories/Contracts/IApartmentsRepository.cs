@@ -19,5 +19,7 @@ namespace EntranceManager.Repositories
         Task<IEnumerable<Apartment>> GetApartmentsByOwnerAsync(int ownerUserId);
 
         Task<Apartment> GetApartmentWithFeesAsync(int id);
+
+        Task AddUserToApartmentAsync(ApartmentUser apartmentUser);
     }
 }

@@ -13,5 +13,7 @@ namespace EntranceManager.Services
         Task UpdateApartmentAsync(Apartment apartment);
 
         Task DeleteApartmentAsync(int id);
+
+        Task AddUserToApartmentAsync(int apartmentId, int userId);
     }
 }

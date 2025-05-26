@@ -21,8 +21,8 @@ namespace EntranceManager.Repositories
         public async Task<Apartment> GetByIdAsync(int id)
         {
             return await _dbContext.Apartments
-                .Include(a => a.ApartmentFees) // Зареждаме всички такси на апартамента
-                .ThenInclude(af => af.Fee)   // Зареждаме самите такси
+                .Include(a => a.ApartmentFees)
+                .ThenInclude(af => af.Fee)   
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 
@@ -61,6 +61,12 @@ namespace EntranceManager.Repositories
                 .Include(a => a.ApartmentFees)
                 .ThenInclude(af => af.Fee)
                 .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task AddUserToApartmentAsync(ApartmentUser apartmentUser)
+        {
+            await _dbContext.ApartmentUsers.AddAsync(apartmentUser);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

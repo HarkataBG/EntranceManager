@@ -1,6 +1,7 @@
 ﻿using EntranceManager.Models;
 using EntranceManager.Repositories;
 using EntranceManager.Services.Contracts;
+using System.Security.Claims;
 
 namespace EntranceManager.Services
 {
@@ -14,6 +15,7 @@ namespace EntranceManager.Services
             _userRepository = userRepository;
             _entranceRepository = entranceRepository;
         }
+
         public async Task PromoteToManagerAsync(int userId, int entranceId)
         {
             var user = await _userRepository.GetByIdAsync(userId)
@@ -29,8 +31,41 @@ namespace EntranceManager.Services
             {
                 throw new Exception("User does not belong to the specified entrance.");
             }
-            user.Role = "EntranceManager"; 
+
+            entrance.ManagerUserId = user.Id;
+
             await _userRepository.UpdateAsync(user);
+            await _entranceRepository.UpdateAsync(entrance);
         }
-    }
+
+        public async Task<User> GetByUsernameAsync(string username)
+        {
+            var user = await _userRepository.GetByUsernameAsync(username);
+            if (user == null)
+            {
+                throw new Exception($"User with username '{username}' not found.");
+            }
+
+            return user;
+        }
+
+        public async Task GetAuthorizedUserForEntranceAsync(ClaimsPrincipal userPrincipal, int entranceId)
+        {
+            var username = userPrincipal.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var user = await GetByUsernameAsync(username);
+
+            if (user.Role != "Administrator")
+            {
+                if (user.Role == "EntranceManager" &&
+                    !user.ManagedEntrances.Any(e => e.Id == entranceId))
+                {
+                    throw new UnauthorizedAccessException("You cannot manage apartments outside your assigned entrance.");
+                }
+            }
+
+            }
+        }
 }
