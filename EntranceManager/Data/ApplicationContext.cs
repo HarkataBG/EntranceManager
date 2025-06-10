@@ -14,6 +14,9 @@ namespace EntranceManager.Data
         public DbSet<Entrance> Entrances { get; set; }
         public DbSet<Fee> Fees { get; set; }
         public DbSet<ApartmentFee> ApartmentFees { get; set; }
+        public DbSet<ApartmentUser> ApartmentUsers { get; set; }
+        public DbSet<EntranceUser> EntranceUsers { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -65,6 +68,12 @@ namespace EntranceManager.Data
                 .HasOne(eu => eu.Entrance)
                 .WithMany(e => e.EntranceUsers)
                 .HasForeignKey(eu => eu.EntranceId);
+
+            modelBuilder.Entity<Entrance>()
+                .HasOne(e => e.ManagerUser)
+                .WithMany(u => u.ManagedEntrances)
+                .HasForeignKey(e => e.ManagerUserId)
+                .OnDelete(DeleteBehavior.Restrict);
         }
     }
 }

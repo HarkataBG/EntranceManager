@@ -18,13 +18,36 @@ namespace EntranceManager.Repositories
             return await _dbContext.Apartments.ToListAsync();
         }
 
+        public async Task<List<Apartment>> GetAllWithDetailsAsync()
+        {
+            return await _dbContext.Apartments
+                 .Include(a => a.ApartmentFees)
+                     .ThenInclude(af => af.Fee)
+                 .Include(a => a.ApartmentUsers)
+                     .ThenInclude(au => au.User)
+                 .Include(a => a.OwnerUser)
+                 .Include(a => a.Entrance)
+                 .ToListAsync();
+        }
+
         public async Task<Apartment> GetByIdAsync(int id)
         {
             return await _dbContext.Apartments
                 .Include(a => a.ApartmentFees)
-                .ThenInclude(af => af.Fee)   
+                    .ThenInclude(af => af.Fee)
+                .Include(a => a.ApartmentUsers)
+                    .ThenInclude(au => au.User)
+                .Include(a => a.OwnerUser)
+                .Include(a => a.Entrance)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
+
+        public async Task<Apartment> GetApartmentByNumber(int apartmentNumber, int entranceId)
+        {
+            return await _dbContext.Apartments
+                .Where(a => a.EntranceId == entranceId)
+                .FirstOrDefaultAsync(a => a.Number == apartmentNumber);
+    }
 
         public async Task AddAsync(Apartment apartment)
         {

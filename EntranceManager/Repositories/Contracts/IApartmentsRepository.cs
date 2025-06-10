@@ -21,5 +21,9 @@ namespace EntranceManager.Repositories
         Task<Apartment> GetApartmentWithFeesAsync(int id);
 
         Task AddUserToApartmentAsync(ApartmentUser apartmentUser);
+
+        Task<Apartment> GetApartmentByNumber(int number, int entranceId);
+
+        Task<List<Apartment>> GetAllWithDetailsAsync();
     }
 }

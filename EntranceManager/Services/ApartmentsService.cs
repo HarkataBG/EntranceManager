@@ -1,5 +1,6 @@
 ﻿using EntranceManager.Exceptions;
 using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using EntranceManager.Repositories;
 
 namespace EntranceManager.Services
@@ -22,6 +23,72 @@ namespace EntranceManager.Services
             return await _apartmentRepository.GetAllAsync();
         }
 
+        public async Task<IEnumerable<ApartmentResponseDto>> GetAllApartmentsDetailsAsync()
+        {
+            var apartments = await _apartmentRepository.GetAllWithDetailsAsync();
+
+            var result = apartments.Select(a => new ApartmentResponseDto
+            {
+                Id = a.Id,
+                Floor = a.Floor,
+                Number = a.Number,
+                NumberOfLivingPeople = a.ApartmentUsers?.Count ?? 0,
+                Owner = new OwnerDto
+                {
+                    Id = a.OwnerUser.Id,
+                    Username = a.OwnerUser.Username
+                },
+                Entrance = new EntranceDto
+                {
+                    Id = a.Entrance.Id,
+                    City = a.Entrance.City,
+                    Address = a.Entrance.Address,
+                    EntranceSymbol = a.Entrance.EntranceSymbol
+                },
+                Residents = a.ApartmentUsers
+                    .Select(au => new ResidentDto
+                    {
+                        Id = au.User.Id,
+                        Username = au.User.Username
+                    })
+                    .ToList()
+            }).ToList();
+
+            return result;
+        }
+
+        public async Task<ApartmentResponseDto?> GetApartmentDetailsByIdAsync(int id)
+        {
+            var apartment = await _apartmentRepository.GetByIdAsync(id);
+
+            return new ApartmentResponseDto
+            {
+                Id = apartment.Id,
+                Floor = apartment.Floor,
+                Number = apartment.Number,
+                NumberOfLivingPeople = apartment.ApartmentUsers?.Count ?? 0,
+                Owner = new OwnerDto
+                {
+                    Id = apartment.OwnerUser.Id,
+                    Username = apartment.OwnerUser.Username
+                },
+                Entrance = new EntranceDto
+                {
+                    Id = apartment.Entrance.Id,
+                    City = apartment.Entrance.City,
+                    Address = apartment.Entrance.Address,
+                    EntranceSymbol = apartment.Entrance.EntranceSymbol
+                },
+                Residents = apartment.ApartmentUsers
+            .Select(au => new ResidentDto
+            {
+                Id = au.User.Id,
+                Username = au.User.Username
+            })
+            .ToList()
+            };
+        }       
+
         public async Task<Apartment?> GetApartmentByIdAsync(int id)
         {
             return await _apartmentRepository.GetByIdAsync(id);
@@ -29,6 +96,10 @@ namespace EntranceManager.Services
 
         public async Task AddApartmentAsync(Apartment apartment)
         {
+            var existingApartment = await _apartmentRepository.GetApartmentByNumber(apartment.Number, apartment.EntranceId);
+            if (existingApartment != null)
+                throw new ApartmentAlreadyExistsException(apartment.Number, apartment.EntranceId);
+
             var owner = await _userRepository.GetByIdAsync(apartment.OwnerUserId);
             if (owner == null)
                 throw new OwnerNotFoundException(apartment.OwnerUserId);
@@ -38,6 +109,14 @@ namespace EntranceManager.Services
                 throw new EntranceNotFoundException(apartment.EntranceId);
 
             await _apartmentRepository.AddAsync(apartment);
+
+            var apartmentUser = new ApartmentUser
+            {
+                ApartmentId = apartment.Id,
+                UserId = apartment.OwnerUserId
+            };
+
+            await _apartmentRepository.AddUserToApartmentAsync(apartmentUser);
         }
 
         public async Task UpdateApartmentAsync(Apartment apartment)

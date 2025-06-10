@@ -29,9 +29,9 @@ namespace EntranceManager.Controllers.Api
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<Apartment>> GetAccessibleApartmentsAsync()
+        public async Task<IEnumerable<ApartmentResponseDto>> GetAccessibleApartmentsAsync()
         {
-            var allApartments = await _apartmentService.GetAllApartmentsAsync();
+            var allApartments = await _apartmentService.GetAllApartmentsDetailsAsync();
 
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
@@ -44,22 +44,22 @@ namespace EntranceManager.Controllers.Api
                 "Administrator" => allApartments,
 
                 "EntranceManager" => allApartments
-                    .Where(a => currentUser.ManagedEntrances.Any(e => e.Id == a.EntranceId)),
+                    .Where(a => currentUser.ManagedEntrances.Any(e => e.Id == a.Entrance.Id)),
 
                 _ => allApartments
                     .Where(a =>
-                        a.OwnerUserId == currentUser.Id ||
-                        a.ApartmentUsers.Any(au => au.UserId == currentUser.Id))
+                        a.Owner.Id == currentUser.Id ||
+                        a.Residents.Any(r => r.Id == currentUser.Id))
             };
         }
 
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Apartment>> GetApartmentById(int id)
+        public async Task<ActionResult<ApartmentResponseDto>> GetApartmentById(int id)
         {
-            var apartment = await _apartmentService.GetApartmentByIdAsync(id);
-            if (apartment == null) return NotFound();
-            return Ok(apartment);
+            var apartmentResponseDto = await _apartmentService.GetApartmentDetailsByIdAsync(id);
+            if (apartmentResponseDto == null) return NotFound();
+            return Ok(apartmentResponseDto);
         }
        
         [HttpPost]
@@ -77,12 +77,14 @@ namespace EntranceManager.Controllers.Api
 
                 await _apartmentService.AddApartmentAsync(apartment);
 
-                return Ok(apartment);
+                return Ok(dto);
             }
             catch (Exception ex)
             {
                 switch (ex)
                 {
+                    case ApartmentAlreadyExistsException _:
+                        return StatusCode(StatusCodes.Status409Conflict, ex.Message);
                     case OwnerNotFoundException _:
                     case EntranceNotFoundException _:
                         return StatusCode(StatusCodes.Status404NotFound, ex.Message);
