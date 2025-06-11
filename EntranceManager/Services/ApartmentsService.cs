@@ -44,7 +44,7 @@ namespace EntranceManager.Services
                     Id = a.Entrance.Id,
                     City = a.Entrance.City,
                     Address = a.Entrance.Address,
-                    EntranceSymbol = a.Entrance.EntranceSymbol
+                    EntranceName = a.Entrance.EntranceName
                 },
                 Residents = a.ApartmentUsers
                     .Select(au => new ResidentDto
@@ -81,7 +81,7 @@ namespace EntranceManager.Services
                     Id = apartment.Entrance.Id,
                     City = apartment.Entrance.City,
                     Address = apartment.Entrance.Address,
-                    EntranceSymbol = apartment.Entrance.EntranceSymbol
+                    EntranceName = apartment.Entrance.EntranceName
                 },
                 Residents = apartment.ApartmentUsers
             .Select(au => new ResidentDto
