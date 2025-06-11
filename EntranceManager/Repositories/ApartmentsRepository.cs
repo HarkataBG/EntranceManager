@@ -1,6 +1,8 @@
 ﻿using EntranceManager.Models;
 using EntranceManager.Data;
 using Microsoft.EntityFrameworkCore;
+using EntranceManager.Models.Mappers;
+using EntranceManager.Exceptions;
 
 namespace EntranceManager.Repositories
 {
@@ -55,9 +57,14 @@ namespace EntranceManager.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Apartment apartment)
+        public async Task UpdateAsync(Apartment apartment, ApartmentDto dto)
         {
-            _dbContext.Apartments.Update(apartment);
+            apartment.Floor = dto.Floor;
+            apartment.Number = dto.Number;
+            apartment.OwnerUserId = dto.OwnerUserId;
+            apartment.EntranceId = dto.EntranceId;
+
+            _dbContext.Apartments.Update(apartment); 
             await _dbContext.SaveChangesAsync();
         }
 
@@ -89,6 +96,18 @@ namespace EntranceManager.Repositories
         public async Task AddUserToApartmentAsync(ApartmentUser apartmentUser)
         {
             await _dbContext.ApartmentUsers.AddAsync(apartmentUser);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<ApartmentUser> GetApartmentUserAsync(int userId, int apartmentId)
+        {
+            return await _dbContext.ApartmentUsers
+                 .FirstOrDefaultAsync(au => au.UserId == userId && au.ApartmentId == apartmentId);
+        }
+
+        public async Task RemoveUserFromApartmentAsync(ApartmentUser apartmentUser)
+        {            
+            _dbContext.ApartmentUsers.Remove(apartmentUser);
             await _dbContext.SaveChangesAsync();
         }
     }

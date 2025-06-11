@@ -1,5 +1,5 @@
-﻿using EntranceManager.Models.Mappers;
-using EntranceManager.Services;
+﻿using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -18,7 +18,7 @@ namespace EntranceManager.Controllers.Api
             _usersService = usersService;
         }
 
-        [Authorize(Roles = "Administrator")]
+        [Authorize(Roles = nameof(UserRole.Administrator))]
         [HttpPost("promote")]
         public async Task<IActionResult> PromoteEntranceManager([FromBody] EntranceManagerDto dto)
         {

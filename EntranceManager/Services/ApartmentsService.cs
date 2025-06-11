@@ -2,6 +2,7 @@
 using EntranceManager.Models;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Repositories;
+using Microsoft.EntityFrameworkCore;
 
 namespace EntranceManager.Services
 {
@@ -61,6 +62,9 @@ namespace EntranceManager.Services
         {
             var apartment = await _apartmentRepository.GetByIdAsync(id);
 
+            if (apartment == null)
+                throw new ApartmentNotFoundException(id);
+
             return new ApartmentResponseDto
             {
                 Id = apartment.Id,
@@ -91,6 +95,10 @@ namespace EntranceManager.Services
 
         public async Task<Apartment?> GetApartmentByIdAsync(int id)
         {
+            var apartment = await _apartmentRepository.GetByIdAsync(id);
+            if (apartment == null)
+                throw new ApartmentNotFoundException(id);
+
             return await _apartmentRepository.GetByIdAsync(id);
         }
 
@@ -109,27 +117,23 @@ namespace EntranceManager.Services
                 throw new EntranceNotFoundException(apartment.EntranceId);
 
             await _apartmentRepository.AddAsync(apartment);
-
-            var apartmentUser = new ApartmentUser
-            {
-                ApartmentId = apartment.Id,
-                UserId = apartment.OwnerUserId
-            };
-
-            await _apartmentRepository.AddUserToApartmentAsync(apartmentUser);
         }
 
-        public async Task UpdateApartmentAsync(Apartment apartment)
+        public async Task UpdateApartmentAsync(int apartmentId, ApartmentDto dto)
         {
-            var owner = await _userRepository.GetByIdAsync(apartment.OwnerUserId);
+            var owner = await _userRepository.GetByIdAsync(dto.OwnerUserId);
             if (owner == null)
-                throw new OwnerNotFoundException(apartment.OwnerUserId);
+                throw new OwnerNotFoundException(dto.OwnerUserId);
 
-            var entrance = await _entranceRepository.GetByIdAsync(apartment.EntranceId);
+            var entrance = await _entranceRepository.GetByIdAsync(dto.EntranceId);
             if (entrance == null)
-                throw new EntranceNotFoundException(apartment.EntranceId);
+                throw new EntranceNotFoundException(dto.EntranceId);
 
-            await _apartmentRepository.UpdateAsync(apartment);
+            var apartment = await _apartmentRepository.GetByIdAsync(apartmentId);
+            if (apartment == null)
+                throw new ApartmentNotFoundException(apartmentId);
+
+            await _apartmentRepository.UpdateAsync(apartment, dto);
         }
 
         public async Task DeleteApartmentAsync(int id)
@@ -150,7 +154,7 @@ namespace EntranceManager.Services
             bool alreadyAdded = apartment.ApartmentUsers
                 .Any(au => au.UserId == userId);
             if (alreadyAdded)
-                throw new InvalidOperationException("User is already added to this apartment.");
+                throw new UserAlreadyAddedException("apartment");
 
             var apartmentUser = new ApartmentUser
             {
@@ -159,6 +163,23 @@ namespace EntranceManager.Services
             };
 
             await _apartmentRepository.AddUserToApartmentAsync(apartmentUser);
+        }
+
+        public async Task RemoveUserFromApartment(int apartmentId, int userId)
+        {
+            var apartment = await _apartmentRepository.GetByIdAsync(apartmentId);
+            if (apartment == null)
+                throw new ApartmentNotFoundException(apartmentId);
+
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                throw new UserNotFoundException(userId);
+
+            var apartmentUser = await _apartmentRepository.GetApartmentUserAsync(userId, apartmentId);
+            if (apartmentUser == null)
+                throw new ApartmentUserNotFoundException(userId, apartmentId);
+
+            await _apartmentRepository.RemoveUserFromApartmentAsync(apartmentUser);
         }
     }
 }

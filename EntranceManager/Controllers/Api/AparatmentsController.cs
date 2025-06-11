@@ -41,9 +41,9 @@ namespace EntranceManager.Controllers.Api
 
             return currentUser.Role switch
             {
-                "Administrator" => allApartments,
+                nameof(UserRole.Administrator) => allApartments,
 
-                "EntranceManager" => allApartments
+                nameof(UserRole.EntranceManager) => allApartments
                     .Where(a => currentUser.ManagedEntrances.Any(e => e.Id == a.Entrance.Id)),
 
                 _ => allApartments
@@ -55,6 +55,7 @@ namespace EntranceManager.Controllers.Api
 
 
         [HttpGet("{id}")]
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
         public async Task<ActionResult<ApartmentResponseDto>> GetApartmentById(int id)
         {
             var apartmentResponseDto = await _apartmentService.GetApartmentDetailsByIdAsync(id);
@@ -63,7 +64,7 @@ namespace EntranceManager.Controllers.Api
         }
        
         [HttpPost]
-        [Authorize(Roles = "EntranceManager,Administrator")]
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.EntranceManager)}")]
         public async Task<IActionResult> CreateApartment([FromBody] ApartmentDto dto)
         {
             if (!ModelState.IsValid)
@@ -83,6 +84,8 @@ namespace EntranceManager.Controllers.Api
             {
                 switch (ex)
                 {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
                     case ApartmentAlreadyExistsException _:
                         return StatusCode(StatusCodes.Status409Conflict, ex.Message);
                     case OwnerNotFoundException _:
@@ -96,19 +99,15 @@ namespace EntranceManager.Controllers.Api
         }
 
         [HttpPut("{id}")]
-        [Authorize(Roles = "EntranceManager,Administrator")]
-        public async Task<ActionResult> UpdateApartment(int id, Apartment apartment)
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.EntranceManager)}")]
+
+        public async Task<ActionResult> UpdateApartment(int id, [FromBody] ApartmentDto dto)
         {
             try
             {
-                if (id != apartment.Id) return BadRequest();
+                await _usersService.GetAuthorizedUserForEntranceAsync(User, dto.EntranceId);
 
-                var existing = await _apartmentService.GetApartmentByIdAsync(id);
-                if (existing == null) return NotFound();
-
-                await _usersService.GetAuthorizedUserForEntranceAsync(User, apartment.EntranceId);
-
-                await _apartmentService.UpdateApartmentAsync(apartment);
+                await _apartmentService.UpdateApartmentAsync(id, dto);
 
                 return NoContent();
             }
@@ -116,7 +115,10 @@ namespace EntranceManager.Controllers.Api
             {
                 switch (ex)
                 {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
                     case OwnerNotFoundException _:
+                    case ApartmentNotFoundException _:
                     case EntranceNotFoundException _:
                         return StatusCode(StatusCodes.Status404NotFound, ex.Message);
 
@@ -127,16 +129,37 @@ namespace EntranceManager.Controllers.Api
         }
 
         [HttpDelete("{id}")]
-        [Authorize(Roles = "EntranceManager,Administrator")]
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)},{nameof(UserRole.EntranceManager)}")]
+
         public async Task<ActionResult> DeleteApartment(int id)
         {
-            var existingApartment = await _apartmentService.GetApartmentByIdAsync(id);
-            if (existingApartment == null) return NotFound();
+            try
+            {
+                var existingApartment = await _apartmentService.GetApartmentByIdAsync(id);
+                if (existingApartment == null)
+                {
+                    throw new ApartmentNotFoundException(id);
+                }
 
-            await _usersService.GetAuthorizedUserForEntranceAsync(User, existingApartment.EntranceId);
+                await _usersService.GetAuthorizedUserForEntranceAsync(User, existingApartment.EntranceId);
 
-            await _apartmentService.DeleteApartmentAsync(id);
-            return NoContent();
+                await _apartmentService.DeleteApartmentAsync(id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case ApartmentNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
         }
 
         [HttpPost("{apartmentId}/users/{userId}")]
@@ -145,37 +168,59 @@ namespace EntranceManager.Controllers.Api
         {
             try
             {
-                var username = User.Identity?.Name;
-                if (string.IsNullOrEmpty(username))
-                    return Unauthorized();
-
-                var currentUser = await _usersService.GetByUsernameAsync(username);
                 var apartment = await _apartmentService.GetApartmentByIdAsync(apartmentId);
 
-                if (apartment == null)
-                    return NotFound("Apartment not found.");
-
-                if (currentUser.Role != "Administrator")
-                { 
-                    if (currentUser.Role == "EntranceManager" &&
-                        !currentUser.ManagedEntrances.Any(e => e.Id == apartment.EntranceId))
-                    {
-                        return Forbid("You are not allowed to modify apartments outside your managed entrances.");
-                    }
-
-                    if (currentUser.Role == "User" &&
-                        apartment.OwnerUserId != currentUser.Id)
-                    {
-                        return Forbid("You are not allowed to modify apartments you don't own.");
-                    }
-                }
+                await _usersService.GetAuthorizedUserForApartmentAsync(User, apartment);
 
                 await _apartmentService.AddUserToApartmentAsync(apartmentId, userId);
                 return Ok(new { message = "User added to apartment successfully." });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, new { message = "Unexpected error occurred.", detail = ex.Message });
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case UserAlreadyAddedException _:
+                    case ApartmentAlreadyExistsException _:
+                        return StatusCode(StatusCodes.Status409Conflict, ex.Message);
+                    case UserNotFoundException _:
+                    case ApartmentNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+        }
+
+        [HttpDelete("{apartmentId}/users/{userId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveUserFromApartment(int apartmentId, int userId)
+        {
+            try
+            {
+                var apartment = await _apartmentService.GetApartmentByIdAsync(apartmentId);
+
+                await _usersService.GetAuthorizedUserForApartmentAsync(User, apartment);
+
+                await _apartmentService.RemoveUserFromApartment(apartmentId, userId);
+                return Ok(new { message = "User removed from apartment successfully." });
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case UserNotFoundException _:
+                    case ApartmentUserNotFoundException _:
+                    case ApartmentNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
             }
         }
     }

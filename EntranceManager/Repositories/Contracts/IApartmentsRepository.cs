@@ -1,4 +1,5 @@
 ﻿using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 
@@ -12,7 +13,7 @@ namespace EntranceManager.Repositories
 
         Task AddAsync(Apartment apartment);
 
-        Task UpdateAsync(Apartment apartment);
+        Task UpdateAsync(Apartment apartment, ApartmentDto dto);
 
         Task DeleteAsync(int id);
 
@@ -25,5 +26,9 @@ namespace EntranceManager.Repositories
         Task<Apartment> GetApartmentByNumber(int number, int entranceId);
 
         Task<List<Apartment>> GetAllWithDetailsAsync();
+
+        Task<ApartmentUser> GetApartmentUserAsync(int userId, int apartmentId);
+
+        Task RemoveUserFromApartmentAsync(ApartmentUser apartmentUser);
     }
 }

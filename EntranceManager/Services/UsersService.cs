@@ -57,7 +57,7 @@ namespace EntranceManager.Services
 
             var user = await GetByUsernameAsync(username);
 
-            if (user.Role != "Administrator")
+            if (user.Role != nameof(UserRole.Administrator))
             {
                 if (user.Role == "EntranceManager" &&
                     !user.ManagedEntrances.Any(e => e.Id == entranceId))
@@ -65,7 +65,30 @@ namespace EntranceManager.Services
                     throw new UnauthorizedAccessException("You cannot manage apartments outside your assigned entrance.");
                 }
             }
+        }
 
+        public async Task GetAuthorizedUserForApartmentAsync(ClaimsPrincipal userPrincipal, Apartment apartment)
+        {
+            var username = userPrincipal.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var currentUser = await GetByUsernameAsync(username);
+
+            if (currentUser.Role != nameof(UserRole.Administrator))
+            {
+                if (currentUser.Role == "EntranceManager" &&
+                    !currentUser.ManagedEntrances.Any(e => e.Id == apartment.EntranceId))
+                {
+                    throw new UnauthorizedAccessException("You are not allowed to modify apartments outside your managed entrances.");
+                }
+
+                if (currentUser.Role == "User" &&
+                    apartment.OwnerUserId != currentUser.Id)
+                {
+                    throw new UnauthorizedAccessException("You are not allowed to modify apartments you don't own.");
+                }
             }
         }
+    }
 }
