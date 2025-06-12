@@ -70,11 +70,19 @@ namespace AspNetCoreDemo.Helpers
                 City = entrance.City,
                 Address = entrance.Address,
                 EntranceName = entrance.EntranceName,
-                Manager = new ManagerDto
-                {
-                    Id = entrance.ManagerUser.Id,
-                    Username = entrance.ManagerUser.Username
-                },
+
+                Manager = entrance.ManagerUser != null
+                 ? new ManagerDto
+                 {
+                     Id = entrance.ManagerUser.Id,
+                     Username = entrance.ManagerUser.Username
+                 }
+                 : new ManagerDto
+                 {
+                     Id = 0,
+                     Username = string.Empty
+                 },
+
                 Apartments = entrance.Apartments?.Select(a => new ApartmentSummaryDto
                 {
                     Id = a.Id,
@@ -83,14 +91,14 @@ namespace AspNetCoreDemo.Helpers
                 }).ToList() ?? new List<ApartmentSummaryDto>(),
 
                 Residents = entrance.EntranceUsers?
-                .Select(eu => new ResidentDto
-                {
-                    Id = eu.User.Id,
-                    Username = eu.User.Username
-                })
-                .ToList() ?? new List<ResidentDto>()
-                    };
-                }
-
+                 .Where(eu => eu.User != null)
+                 .Select(eu => new ResidentDto
+                 {
+                     Id = eu.User.Id,
+                     Username = eu.User.Username
+                 })
+                 .ToList() ?? new List<ResidentDto>()
+            };
+        }
     }
 }

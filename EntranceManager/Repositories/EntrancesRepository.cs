@@ -43,15 +43,18 @@ namespace EntranceManager.Repositories
         public async Task<Entrance?> GetByIdAsync(int id)
         {
             return await _dbContext.Entrances
+                .Include(a => a.EntranceUsers)
+                 .ThenInclude(au => au.User)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
         public async Task<Entrance?> GetEntranceByNameAndAdress(string entranceName, string address)
         {
             return await _dbContext.Entrances
-                .FirstOrDefaultAsync(e =>
-                    e.EntranceName.Equals(entranceName, StringComparison.OrdinalIgnoreCase)
-                    && e.Address.Equals(address, StringComparison.OrdinalIgnoreCase));
+                        .FirstOrDefaultAsync(e =>
+                            e.EntranceName.ToLower() == entranceName.ToLower() &&
+                            e.Address.ToLower() == address.ToLower());
+
         }
 
         public async Task AddAsync(Entrance entrance)
