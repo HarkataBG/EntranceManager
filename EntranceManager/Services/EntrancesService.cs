@@ -64,6 +64,7 @@ namespace EntranceManager.Services
             if (existingEntrance == null)
                 throw new EntranceNotFoundException(id);
 
+            _mapper.Map(dto, existingEntrance);
             await _entranceRepository.UpdateAsync(existingEntrance);
         }
 
