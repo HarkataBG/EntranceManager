@@ -66,10 +66,8 @@ namespace EntranceManager.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Apartment apartment, ApartmentDto dto)
+        public async Task UpdateAsync(Apartment apartment)
         {
-            _mapper.Map(dto);
-
             _dbContext.Apartments.Update(apartment); 
             await _dbContext.SaveChangesAsync();
         }

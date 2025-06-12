@@ -13,7 +13,7 @@ namespace EntranceManager.Repositories
 
         Task AddAsync(Entrance entrance);
 
-        Task UpdateAsync(Entrance entrance, EntranceDto? dto = null);
+        Task UpdateAsync(Entrance entrance);
 
         Task DeleteAsync(int id);
 

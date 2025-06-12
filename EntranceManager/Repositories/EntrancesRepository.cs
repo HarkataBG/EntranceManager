@@ -43,8 +43,6 @@ namespace EntranceManager.Repositories
         public async Task<Entrance?> GetByIdAsync(int id)
         {
             return await _dbContext.Entrances
-                .Include(a => a.EntranceUsers)
-                 .ThenInclude(au => au.User)
                 .FirstOrDefaultAsync(e => e.Id == id);
         }
 
@@ -63,11 +61,8 @@ namespace EntranceManager.Repositories
             await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Entrance entrance, EntranceDto? dto = null)
+        public async Task UpdateAsync(Entrance entrance)
         {
-            if (dto != null)
-            _mapper.Map(dto, entrance);
-
             _dbContext.Entrances.Update(entrance);
             await _dbContext.SaveChangesAsync();
         }

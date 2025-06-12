@@ -62,9 +62,9 @@ namespace EntranceManager.Services
         {
             var existingEntrance = await _entranceRepository.GetByIdAsync(id);
             if (existingEntrance == null)
-                throw new EntranceNotFoundException(id);        
+                throw new EntranceNotFoundException(id);
 
-            await _entranceRepository.UpdateAsync(existingEntrance, dto);
+            await _entranceRepository.UpdateAsync(existingEntrance);
         }
 
         public async Task DeleteEntranceAsync(int id)

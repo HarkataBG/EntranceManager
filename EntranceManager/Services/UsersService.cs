@@ -24,13 +24,10 @@ namespace EntranceManager.Services
             var entrance = await _entranceRepository.GetByIdAsync(entranceId)
                            ?? throw new Exception("Entrance not found.");
 
-            bool belongsToEntrance = user.EntranceUsers
-            .Any(eu => eu.EntranceId == entrance.Id);
 
-            if (!belongsToEntrance)
-            {
-                throw new Exception("User does not belong to the specified entrance.");
-            }
+            var entranceUser = await _entranceRepository.GetEntranceUserAsync(userId, entranceId);
+            if (entranceUser == null)
+                throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
 
             entrance.ManagerUserId = user.Id;
 

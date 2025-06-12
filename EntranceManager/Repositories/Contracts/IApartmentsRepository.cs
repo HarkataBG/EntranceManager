@@ -13,7 +13,7 @@ namespace EntranceManager.Repositories
 
         Task AddAsync(Apartment apartment);
 
-        Task UpdateAsync(Apartment apartment, ApartmentDto dto);
+        Task UpdateAsync(Apartment apartment);
 
         Task DeleteAsync(int id);
 

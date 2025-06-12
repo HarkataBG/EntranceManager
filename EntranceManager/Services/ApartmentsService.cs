@@ -56,6 +56,7 @@ namespace EntranceManager.Services
         public async Task AddApartmentAsync(ApartmentDto dto)
         {
             var apartment = _mapper.Map(dto);
+
             var existingApartment = await _apartmentRepository.GetApartmentByNumber(apartment.Number, apartment.EntranceId);
             if (existingApartment != null)
                 throw new ApartmentAlreadyExistsException(apartment.Number, apartment.EntranceId);
@@ -93,7 +94,9 @@ namespace EntranceManager.Services
             if (apartment == null)
                 throw new ApartmentNotFoundException(apartmentId);
 
-            await _apartmentRepository.UpdateAsync(apartment, dto);
+            _mapper.Map(dto, apartment);
+
+            await _apartmentRepository.UpdateAsync(apartment);
         }
 
         public async Task DeleteApartmentAsync(int id)
