@@ -1,49 +1,100 @@
-﻿using EntranceManager.Data;
+﻿using AspNetCoreDemo.Helpers;
+using EntranceManager.Data;
 using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using Microsoft.EntityFrameworkCore;
 
 namespace EntranceManager.Repositories
 {
     public class EntranceRepository : IEntranceRepository
     {
-        private readonly ApplicationContext _context;
+        private readonly ApplicationContext _dbContext;
+        private readonly ModelMapper _mapper;
 
-        public EntranceRepository(ApplicationContext context)
+        public EntranceRepository(ApplicationContext context, ModelMapper mapper)
         {
-            _context = context;
+            _dbContext = context;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Entrance>> GetAllAsync()
         {
-            return await _context.Entrances.ToListAsync();
+            return await _dbContext.Entrances.ToListAsync();
+        }
+
+        public async Task<List<Entrance>> GetAllWithDetailsAsync()
+        {
+            return await _dbContext.Entrances
+                  .Include(a => a.EntranceUsers)
+                     .ThenInclude(au => au.User)
+                 .Include(a => a.Apartments)
+                 .ToListAsync();
+        }
+
+        public async Task<Entrance> GetWithDetailsByIdAsync(int id)
+        {
+            return await _dbContext.Entrances
+                  .Include(a => a.EntranceUsers)
+                     .ThenInclude(au => au.User)
+                 .Include(a => a.Apartments)
+                .FirstOrDefaultAsync(a => a.Id == id);
         }
 
         public async Task<Entrance?> GetByIdAsync(int id)
         {
-            return await _context.Entrances
+            return await _dbContext.Entrances
                 .FirstOrDefaultAsync(e => e.Id == id);
+        }
+
+        public async Task<Entrance?> GetEntranceByNameAndAdress(string entranceName, string address)
+        {
+            return await _dbContext.Entrances
+                .FirstOrDefaultAsync(e =>
+                    e.EntranceName.Equals(entranceName, StringComparison.OrdinalIgnoreCase)
+                    && e.Address.Equals(address, StringComparison.OrdinalIgnoreCase));
         }
 
         public async Task AddAsync(Entrance entrance)
         {
-            _context.Entrances.Add(entrance);
-            await _context.SaveChangesAsync();
+            _dbContext.Entrances.Add(entrance);
+            await _dbContext.SaveChangesAsync();
         }
 
-        public async Task UpdateAsync(Entrance entrance)
+        public async Task UpdateAsync(Entrance entrance, EntranceDto? dto = null)
         {
-            _context.Entrances.Update(entrance);
-            await _context.SaveChangesAsync();
+            if (dto != null)
+            _mapper.Map(dto, entrance);
+
+            _dbContext.Entrances.Update(entrance);
+            await _dbContext.SaveChangesAsync();
         }
 
         public async Task DeleteAsync(int id)
         {
-            var entrance = await _context.Entrances.FindAsync(id);
+            var entrance = await _dbContext.Entrances.FindAsync(id);
             if (entrance != null)
             {
-                _context.Entrances.Remove(entrance);
-                await _context.SaveChangesAsync();
+                _dbContext.Entrances.Remove(entrance);
+                await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task AddUserToEntranceAsync(EntranceUser entranceUser)
+        {
+            await _dbContext.EntranceUsers.AddAsync(entranceUser);
+            await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<EntranceUser> GetEntranceUserAsync(int userId, int entranceId)
+        {
+            return await _dbContext.EntranceUsers
+                 .FirstOrDefaultAsync(au => au.UserId == userId && au.EntranceId == entranceId);
+        }
+
+        public async Task RemoveUserFromEntranceAsync(EntranceUser entranceUser)
+        {
+            _dbContext.EntranceUsers.Remove(entranceUser);
+            await _dbContext.SaveChangesAsync();
         }
     }
 }

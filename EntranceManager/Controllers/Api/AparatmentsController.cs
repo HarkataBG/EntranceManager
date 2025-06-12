@@ -18,13 +18,10 @@ namespace EntranceManager.Controllers.Api
 
         private readonly IUsersService _usersService;
 
-        private readonly ModelMapper _modelMapper;
-
-        public ApartmentsController(IApartmentService apartmentService, IUsersService usersService, ModelMapper modelMapper)
+        public ApartmentsController(IApartmentService apartmentService, IUsersService usersService)
         {
             _apartmentService = apartmentService;
             _usersService = usersService;
-            _modelMapper = modelMapper;
         }
 
         [HttpGet]
@@ -72,11 +69,9 @@ namespace EntranceManager.Controllers.Api
 
             try
             {
-                var apartment = _modelMapper.Map(dto);
+                await _usersService.GetAuthorizedUserForEntranceAsync(User, dto.EntranceId);
 
-                await _usersService.GetAuthorizedUserForEntranceAsync(User, apartment.EntranceId);
-
-                await _apartmentService.AddApartmentAsync(apartment);
+                await _apartmentService.AddApartmentAsync(dto);
 
                 return Ok(dto);
             }

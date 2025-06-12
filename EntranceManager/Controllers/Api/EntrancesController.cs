@@ -1,5 +1,10 @@
-﻿using EntranceManager.Models;
+﻿using AspNetCoreDemo.Helpers;
+using EntranceManager.Exceptions;
+using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 using EntranceManager.Services;
+using EntranceManager.Services.Contracts;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace EntranceManager.Controllers.Api
@@ -10,53 +15,179 @@ namespace EntranceManager.Controllers.Api
     {
         private readonly IEntranceService _entranceService;
 
-        public EntrancesController(IEntranceService entranceService)
+        private readonly IUsersService _usersService;
+
+        public EntrancesController(IEntranceService entranceService, IUsersService usersService)
         {
             _entranceService = entranceService;
+            _usersService = usersService;
         }
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Entrance>>> GetAll()
+        [Authorize]
+        public async Task<IEnumerable<EntranceResponseDto>> GetAccessibleEntrancesAsync()
         {
-            var entrances = await _entranceService.GetAllEntrancesAsync();
-            return Ok(entrances);
+            var allEntrances = await _entranceService.GetAllEntrancesDetailsAsync();
+
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var currentUser = await _usersService.GetByUsernameAsync(username);
+
+            return currentUser.Role switch
+            {
+                nameof(UserRole.Administrator) => allEntrances,
+
+                nameof(UserRole.EntranceManager) => allEntrances
+                    .Where(e => currentUser.ManagedEntrances.Any(me => me.Id == e.Id)),
+
+                _ => allEntrances
+                    .Where(e => e.Residents.Any(r => r.Id == currentUser.Id))
+            };
         }
 
+
         [HttpGet("{id}")]
-        public async Task<ActionResult<Entrance>> GetById(int id)
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
+        public async Task<ActionResult<EntranceResponseDto>> GetEntranceById(int id)
         {
-            var entrance = await _entranceService.GetEntranceByIdAsync(id);
-            if (entrance == null) return NotFound();
-            return Ok(entrance);
+            var apartmentResponseDto = await _entranceService.GetEntranceByIdAsync(id);
+            if (apartmentResponseDto == null) return NotFound();
+            return Ok(apartmentResponseDto);
         }
 
         [HttpPost]
-        public async Task<ActionResult> Create(Entrance entrance)
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
+        public async Task<IActionResult> CreateEntrance([FromBody] EntranceDto dto)
         {
-            await _entranceService.AddEntranceAsync(entrance);
-            return CreatedAtAction(nameof(GetById), new { id = entrance.Id }, entrance);
+            if (!ModelState.IsValid)
+                return BadRequest(ModelState);
+
+            try
+            {
+                await _entranceService.AddEntranceAsync(dto);
+
+                return Ok(dto);
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceAlreadyExistsException _:
+                        return StatusCode(StatusCodes.Status409Conflict, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
         }
 
         [HttpPut("{id}")]
-        public async Task<ActionResult> Update(int id, Entrance entrance)
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
+        public async Task<ActionResult> UpdateEntrance(int id, [FromBody] EntranceDto dto)
         {
-            if (id != entrance.Id) return BadRequest();
+            try
+            {
+                await _entranceService.UpdateEntranceAsync(id, dto);
 
-            var existing = await _entranceService.GetEntranceByIdAsync(id);
-            if (existing == null) return NotFound();
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
 
-            await _entranceService.UpdateEntranceAsync(entrance);
-            return NoContent();
+                    default:
+                        throw;
+                }
+            }
         }
 
         [HttpDelete("{id}")]
-        public async Task<ActionResult> Delete(int id)
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
+        public async Task<ActionResult> DeleteEntrance(int id)
         {
-            var existing = await _entranceService.GetEntranceByIdAsync(id);
-            if (existing == null) return NotFound();
+            try
+            {
+                var existingApartment = await _entranceService.GetEntranceByIdAsync(id);
+                if (existingApartment == null)
+                {
+                    throw new ApartmentNotFoundException(id);
+                }
 
-            await _entranceService.DeleteEntranceAsync(id);
-            return NoContent();
+                await _entranceService.DeleteEntranceAsync(id);
+
+                return NoContent();
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+        }
+
+        [HttpPost("{entranceId}/users/{userId}")]
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
+        public async Task<IActionResult> AddUserToEntrance(int entranceId, int userId)
+        {
+            try
+            {
+                var entrance = await _entranceService.GetEntranceByIdAsync(entranceId);
+
+                await _entranceService.AddUserToEntranceAsync(entranceId, userId);
+                return Ok(new { message = "User added to entrance successfully." });
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceAlreadyExistsException _:
+                        return StatusCode(StatusCodes.Status409Conflict, ex.Message);
+                    case UserNotFoundException _:
+                    case EntranceNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+        }
+
+        [HttpDelete("{entranceId}/users/{userId}")]
+        [Authorize]
+        public async Task<IActionResult> RemoveUserFromEntrance(int entranceId, int userId)
+        {
+            try
+            { 
+                var apartment = await _entranceService.GetEntranceByIdAsync(entranceId);
+
+                await _entranceService.RemoveUserFromEntrance(entranceId, userId);
+                return Ok(new { message = "User removed from entrance successfully." });
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case UserNotFoundException _:
+                    case ApartmentUserNotFoundException _:
+                    case ApartmentNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
         }
     }
 }

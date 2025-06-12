@@ -8,7 +8,7 @@
         public int NumberOfLivingPeople { get; set; }
 
         public OwnerDto Owner { get; set; }
-        public EntranceDto Entrance { get; set; }
+        public EntranceSummaryDto Entrance { get; set; }
         public List<ResidentDto> Residents { get; set; }
     }
 }

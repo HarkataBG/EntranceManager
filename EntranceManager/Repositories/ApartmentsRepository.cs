@@ -3,16 +3,19 @@ using EntranceManager.Data;
 using Microsoft.EntityFrameworkCore;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Exceptions;
+using AspNetCoreDemo.Helpers;
 
 namespace EntranceManager.Repositories
 {
     public class ApartmentRepository : IApartmentRepository
     {
         private readonly ApplicationContext _dbContext;
+        private readonly ModelMapper _mapper;
 
-        public ApartmentRepository(ApplicationContext dbContext)
+        public ApartmentRepository(ApplicationContext dbContext, ModelMapper mapper)
         {
             _dbContext = dbContext;
+            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Apartment>> GetAllAsync()
@@ -33,6 +36,12 @@ namespace EntranceManager.Repositories
         }
 
         public async Task<Apartment> GetByIdAsync(int id)
+        {
+            return await _dbContext.Apartments
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<Apartment> GetWithDetailsByIdAsync(int id)
         {
             return await _dbContext.Apartments
                 .Include(a => a.ApartmentFees)
@@ -59,10 +68,7 @@ namespace EntranceManager.Repositories
 
         public async Task UpdateAsync(Apartment apartment, ApartmentDto dto)
         {
-            apartment.Floor = dto.Floor;
-            apartment.Number = dto.Number;
-            apartment.OwnerUserId = dto.OwnerUserId;
-            apartment.EntranceId = dto.EntranceId;
+            _mapper.Map(dto);
 
             _dbContext.Apartments.Update(apartment); 
             await _dbContext.SaveChangesAsync();

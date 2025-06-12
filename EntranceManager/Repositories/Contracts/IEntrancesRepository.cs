@@ -1,4 +1,5 @@
 ﻿using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
 
 namespace EntranceManager.Repositories
 {
@@ -8,10 +9,22 @@ namespace EntranceManager.Repositories
 
         Task<Entrance?> GetByIdAsync(int id);
 
+        Task<Entrance?> GetEntranceByNameAndAdress(string entranceName, string address);
+
         Task AddAsync(Entrance entrance);
 
-        Task UpdateAsync(Entrance entrance);
+        Task UpdateAsync(Entrance entrance, EntranceDto? dto = null);
 
         Task DeleteAsync(int id);
+
+        Task<List<Entrance>> GetAllWithDetailsAsync();
+
+        Task<Entrance> GetWithDetailsByIdAsync(int id);
+
+        Task AddUserToEntranceAsync(EntranceUser entranceUser);
+
+        Task<EntranceUser> GetEntranceUserAsync(int userId, int entranceId);
+
+        Task RemoveUserFromEntranceAsync(EntranceUser apartmentUser);
     }
 }
