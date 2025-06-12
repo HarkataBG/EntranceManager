@@ -64,6 +64,10 @@ namespace EntranceManager.Services
             if (owner == null)
                 throw new OwnerNotFoundException(apartment.OwnerUserId);
 
+            var entranceUser = await _entranceRepository.GetEntranceUserAsync(dto.OwnerUserId, dto.EntranceId);
+            if (entranceUser == null)
+                throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
+
             var entrance = await _entranceRepository.GetByIdAsync(apartment.EntranceId);
             if (entrance == null)
                 throw new EntranceNotFoundException(apartment.EntranceId);
@@ -76,6 +80,10 @@ namespace EntranceManager.Services
             var owner = await _userRepository.GetByIdAsync(dto.OwnerUserId);
             if (owner == null)
                 throw new OwnerNotFoundException(dto.OwnerUserId);
+
+            var entranceUser = await _entranceRepository.GetEntranceUserAsync(dto.OwnerUserId, dto.EntranceId);
+            if (entranceUser == null)
+                throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
 
             var entrance = await _entranceRepository.GetByIdAsync(dto.EntranceId);
             if (entrance == null)
@@ -107,6 +115,10 @@ namespace EntranceManager.Services
                 .Any(au => au.UserId == userId);
             if (alreadyAdded)
                 throw new UserAlreadyAddedException("apartment");
+
+            var entranceUser = await _entranceRepository.GetEntranceUserAsync(apartment.OwnerUserId, apartment.EntranceId);
+            if (entranceUser == null)
+                throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
 
             var apartmentUser = new ApartmentUser
             {
