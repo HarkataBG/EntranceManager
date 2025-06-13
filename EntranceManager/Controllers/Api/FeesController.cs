@@ -23,25 +23,31 @@ namespace EntranceManager.Controllers.Api
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<FeeResponseDto>> GetAllFees()
+        public async Task<ActionResult<IEnumerable<FeeResponseDto>>> GetAllFees()
         {
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
-                throw new UnauthorizedAccessException("User is not authenticated.");
-
-            var allFees = await _feesService.GetAllFeeDetailsAsync();
-
-            var currentUser = await _usersService.GetByUsernameAsync(username);
-
-            return currentUser.Role switch
+            try
             {
-                nameof(UserRole.Administrator) => allFees,
+                var username = User.Identity?.Name;
+                if (string.IsNullOrEmpty(username))
+                    throw new UnauthorizedAccessException("User is not authenticated.");
 
-                nameof(UserRole.EntranceManager) => allFees
-                    .Where(e => currentUser.ManagedEntrances.Any(me => me.Id == e.Id)),
+                var allFees = await _feesService.GetAllFeeDetailsAsync(username);
 
-                _ => new List<FeeResponseDto>()
-            };
+                return Ok(allFees);
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case OwnerNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
 
         }
 

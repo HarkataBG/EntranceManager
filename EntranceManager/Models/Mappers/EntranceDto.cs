@@ -6,5 +6,6 @@
         public string Address { get; set; }
         public string EntranceName { get; set; }
         public int PostCode { get; set; }
+        public bool CountChildrenAsResidents {  get; set; }
     }
 }

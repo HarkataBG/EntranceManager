@@ -13,7 +13,7 @@ namespace EntranceManager.Services
 
         Task DeleteEntranceAsync(int id);
 
-        Task<IEnumerable<EntranceResponseDto>> GetAllEntrancesDetailsAsync();
+        Task<IEnumerable<EntranceResponseDto>> GetAllEntrancesDetailsAsync(string username);
 
         Task<EntranceResponseDto> GetEntranceDetailsByIdAsync(int id);
 

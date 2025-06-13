@@ -23,16 +23,34 @@ namespace EntranceManager.Repositories
             return await _dbContext.Apartments.ToListAsync();
         }
 
-        public async Task<List<Apartment>> GetAllWithDetailsAsync()
+        public async Task<List<Apartment>> GetAllWithDetailsAsync(User currentUser)
         {
-            return await _dbContext.Apartments
-                 .Include(a => a.ApartmentFees)
-                     .ThenInclude(af => af.Fee)
-                 .Include(a => a.ApartmentUsers)
-                     .ThenInclude(au => au.User)
-                 .Include(a => a.OwnerUser)
-                 .Include(a => a.Entrance)
-                 .ToListAsync();
+            IQueryable<Apartment> query = _dbContext.Apartments
+                  .Include(a => a.ApartmentFees)
+                      .ThenInclude(af => af.Fee)
+                  .Include(a => a.ApartmentUsers)
+                      .ThenInclude(au => au.User)
+                  .Include(a => a.OwnerUser)
+                  .Include(a => a.Entrance);
+
+            return currentUser.Role switch
+            {
+                nameof(UserRole.Administrator) => await query.ToListAsync(),
+
+                nameof(UserRole.EntranceManager) =>
+                    await query
+                        .Where(a => currentUser.ManagedEntrances
+                            .Select(e => e.Id)
+                            .Contains(a.EntranceId))
+                        .ToListAsync(),
+
+                _ =>
+                    await query
+                        .Where(a =>
+                            a.OwnerUserId == currentUser.Id ||
+                            a.ApartmentUsers.Any(au => au.UserId == currentUser.Id))
+                        .ToListAsync()
+            };
         }
 
         public async Task<Apartment> GetByIdAsync(int id)

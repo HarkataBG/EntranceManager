@@ -12,18 +12,23 @@ namespace EntranceManager.Services
     {
         private readonly IFeeRepository _feeRepository;
         private readonly IEntranceRepository _entranceRepository;
+        private readonly IUserRepository _userRepository;
         private readonly ModelMapper _mapper;
 
-        public FeesService(IFeeRepository feeRepository, IEntranceRepository entranceRepository, ModelMapper mapper)
+        public FeesService(IFeeRepository feeRepository, IEntranceRepository entranceRepository, IUserRepository userRepository, ModelMapper mapper)
         {
             _feeRepository = feeRepository;
             _entranceRepository = entranceRepository;
+            _userRepository = userRepository;
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<FeeResponseDto>> GetAllFeeDetailsAsync()
+        public async Task<IEnumerable<FeeResponseDto>> GetAllFeeDetailsAsync(string username)
         {
-            var fees = await _feeRepository.GetAllFeeDetailsAsync();
+            var currentUser = await _userRepository.GetByUsernameAsync(username)
+               ?? throw new UserNotFoundException(username);
+
+            var fees = await _feeRepository.GetAllFeeDetailsAsync(currentUser);
             return fees.Select(f => _mapper.Map(f));
         }
 
@@ -47,7 +52,7 @@ namespace EntranceManager.Services
 
         public async Task CreateFeeAsync(FeeDto dto)
         {
-            _ = await _entranceRepository.GetByIdAsync(dto.EntranceId)
+            _ = await _entranceRepository.GetEntranceByIdAsync(dto.EntranceId, false)
                            ?? throw new EntranceNotFoundException(dto.EntranceId);
 
             var fee = _mapper.Map(dto);
@@ -59,7 +64,7 @@ namespace EntranceManager.Services
             var fee = await _feeRepository.GetByIdAsync(id)
                       ?? throw new FeeNotFoundException(id);
 
-            _ = await _entranceRepository.GetByIdAsync(dto.EntranceId)
+            _ = await _entranceRepository.GetEntranceByIdAsync(dto.EntranceId, false)
                           ?? throw new EntranceNotFoundException(dto.EntranceId);
 
             _mapper.Map(dto, fee); 

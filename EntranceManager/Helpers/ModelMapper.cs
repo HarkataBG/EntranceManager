@@ -14,18 +14,20 @@ namespace AspNetCoreDemo.Helpers
             apartment.Number = dto.Number;
             apartment.OwnerUserId = dto.OwnerUserId;
             apartment.EntranceId = dto.EntranceId;
+            apartment.NumberOfChildren = dto.NumberOfChildren;
+            apartment.NumberOfPets = dto.NumberOfPets;
 
             return apartment;
         }
 
-        public ApartmentResponseDto Map(Apartment apartment)
+        public ApartmentResponseDto Map(Apartment apartment, int numberOfLivingPeople)
         {
             return new ApartmentResponseDto
             {
                 Id = apartment.Id,
                 Floor = apartment.Floor,
                 Number = apartment.Number,
-                NumberOfLivingPeople = apartment.ApartmentUsers?.Count ?? 0,
+                NumberOfLivingPeople = numberOfLivingPeople,
                 Owner = new OwnerDto
                 {
                     Id = apartment.OwnerUser.Id,
@@ -60,6 +62,7 @@ namespace AspNetCoreDemo.Helpers
             entrance.EntranceName = dto.EntranceName;
             entrance.Address = dto.Address;
             entrance.PostCode = dto.PostCode;
+            entrance.CountChildrenAsResidents = dto.CountChildrenAsResidents;
 
             return entrance;
         }
@@ -72,6 +75,7 @@ namespace AspNetCoreDemo.Helpers
                 City = entrance.City,
                 Address = entrance.Address,
                 EntranceName = entrance.EntranceName,
+                CountChildrenAsResidents = entrance.CountChildrenAsResidents,
 
                 Manager = entrance.ManagerUser != null
                  ? new ManagerDto

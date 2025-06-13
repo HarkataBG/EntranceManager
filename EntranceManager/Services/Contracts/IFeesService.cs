@@ -5,7 +5,7 @@ namespace EntranceManager.Services.Contracts
 {
     public interface IFeesService
     {
-        Task<IEnumerable<FeeResponseDto>> GetAllFeeDetailsAsync();
+        Task<IEnumerable<FeeResponseDto>> GetAllFeeDetailsAsync(string username);
         Task<FeeResponseDto?> GetFeeDetailsByIdAsync(int id);
         Task<Fee> GetByIdAsync(int id);
         Task CreateFeeAsync(FeeDto dto);

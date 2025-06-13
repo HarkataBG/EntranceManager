@@ -7,7 +7,7 @@ namespace EntranceManager.Services
     {
         Task<IEnumerable<Apartment>> GetAllApartmentsAsync();
 
-        Task<IEnumerable<ApartmentResponseDto>> GetAllApartmentsDetailsAsync();
+        Task<IEnumerable<ApartmentResponseDto>> GetAllApartmentsDetailsAsync(string username);
 
         Task<ApartmentResponseDto?> GetApartmentDetailsByIdAsync(int id);
 

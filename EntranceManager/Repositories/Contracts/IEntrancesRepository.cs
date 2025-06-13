@@ -5,9 +5,9 @@ namespace EntranceManager.Repositories
 {
     public interface IEntranceRepository
     {
-        Task<IEnumerable<Entrance>> GetAllAsync();
+        Task<List<Entrance>> GetAllEntrancesAsync(User currentUser, bool withDetails);
 
-        Task<Entrance?> GetByIdAsync(int id);
+        Task<Entrance> GetEntranceByIdAsync(int id, bool withDetails);
 
         Task<Entrance?> GetEntranceByNameAndAdress(string entranceName, string address);
 
@@ -16,10 +16,6 @@ namespace EntranceManager.Repositories
         Task UpdateAsync(Entrance entrance);
 
         Task DeleteAsync(int id);
-
-        Task<List<Entrance>> GetAllWithDetailsAsync();
-
-        Task<Entrance> GetWithDetailsByIdAsync(int id);
 
         Task AddUserToEntranceAsync(EntranceUser entranceUser);
 

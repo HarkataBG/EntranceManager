@@ -15,38 +15,40 @@ namespace EntranceManager.Controllers.Api
     {
         private readonly IEntranceService _entranceService;
 
-        private readonly IUsersService _usersService;
-
-        public EntrancesController(IEntranceService entranceService, IUsersService usersService)
+        public EntrancesController(IEntranceService entranceService)
         {
             _entranceService = entranceService;
-            _usersService = usersService;
         }
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<EntranceResponseDto>> GetAccessibleEntrancesAsync()
-        {          
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
-                throw new UnauthorizedAccessException("User is not authenticated.");
-
-            var allEntrances = await _entranceService.GetAllEntrancesDetailsAsync();
-
-            var currentUser = await _usersService.GetByUsernameAsync(username);
-
-            return currentUser.Role switch
+        public async Task<ActionResult<IEnumerable<EntranceResponseDto>>> GetAccessibleEntrancesAsync()
+        {
+            try
             {
-                nameof(UserRole.Administrator) => allEntrances,
+                var username = User.Identity?.Name;
+                if (string.IsNullOrEmpty(username))
+                    throw new UnauthorizedAccessException("User is not authenticated.");
 
-                nameof(UserRole.EntranceManager) => allEntrances
-                    .Where(e => currentUser.ManagedEntrances.Any(me => me.Id == e.Id)),
+                var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
 
-                _ => allEntrances
-                    .Where(e => e.Residents.Any(r => r.Id == currentUser.Id))
-            };
+                return Ok(entrances);
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case UserNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+
         }
-
 
         [HttpGet("{id}")]
         [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]

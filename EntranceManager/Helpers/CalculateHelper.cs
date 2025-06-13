@@ -2,9 +2,9 @@
 {
     public static class CalculateHelper
     {
-        //public static int CalculateResidents(int residents, int numberofchildren, bool includeChildren)
-        //{
-
-        //}
+        public static int CalculateResidents(int apartmentUsers, int numberOfChildren, bool includeChildren)
+        {
+            return includeChildren ? apartmentUsers + numberOfChildren : apartmentUsers;
+        }
     }
 }

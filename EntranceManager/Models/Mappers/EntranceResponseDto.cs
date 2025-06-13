@@ -6,6 +6,7 @@
         public string City { get; set; }
         public string Address { get; set; }
         public string EntranceName { get; set; }
+        public bool CountChildrenAsResidents { get; set; }
 
         public ManagerDto Manager { get; set; }
 

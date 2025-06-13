@@ -15,13 +15,26 @@ namespace EntranceManager.Repositories
             _dbContext = dbContext;
         }
 
-        public async Task<IEnumerable<Fee>> GetAllFeeDetailsAsync()
+        public async Task<IEnumerable<Fee>> GetAllFeeDetailsAsync(User currentUser)
         {
-            return await _dbContext.Fees
+            IQueryable<Fee> query = _dbContext.Fees
                 .Include(e => e.Entrance)
                 .Include(af => af.ApartmentFees)
-                    .ThenInclude(a => a.Apartment)
-                .ToListAsync();
+                    .ThenInclude(a => a.Apartment);
+
+            return currentUser.Role switch
+            {
+                nameof(UserRole.Administrator) => await query.ToListAsync(),
+
+                nameof(UserRole.EntranceManager) =>
+                    await query
+                        .Where(a => currentUser.ManagedEntrances
+                            .Select(e => e.Id)
+                            .Contains(a.EntranceId))
+                        .ToListAsync(),
+
+                _ => new List<Fee>()
+            };           
         }
 
         public async Task<Fee> GetFeeDetailsByIdAsync(int id)

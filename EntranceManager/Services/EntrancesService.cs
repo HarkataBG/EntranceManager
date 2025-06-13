@@ -23,16 +23,19 @@ namespace EntranceManager.Services
             _mapper = mapper;
         }
 
-        public async Task<IEnumerable<EntranceResponseDto>> GetAllEntrancesDetailsAsync()
+        public async Task<IEnumerable<EntranceResponseDto>> GetAllEntrancesDetailsAsync(string username)
         {
-            var entrances = await _entranceRepository.GetAllWithDetailsAsync();
+            var currentUser = await _userRepository.GetByUsernameAsync(username)
+               ?? throw new UserNotFoundException(username);
+
+            var entrances = await _entranceRepository.GetAllEntrancesAsync(currentUser, true);
             return entrances.Select(e => _mapper.Map(e));
         }
 
         public async Task<EntranceResponseDto> GetEntranceDetailsByIdAsync(int id)
         {
-            var entrance = await _entranceRepository.GetWithDetailsByIdAsync(id);
-
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(id, true);
+            
             if (entrance == null)
                 throw new EntranceNotFoundException(id);
 
@@ -41,11 +44,11 @@ namespace EntranceManager.Services
 
         public async Task<Entrance?> GetEntranceByIdAsync(int id)
         {
-            var entrance = await _entranceRepository.GetByIdAsync(id);
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(id, false);
             if (entrance == null)
                 throw new EntranceNotFoundException(id);
 
-            return await _entranceRepository.GetByIdAsync(id);
+            return entrance;
         }
 
         public async Task AddEntranceAsync(EntranceDto dto)
@@ -60,7 +63,7 @@ namespace EntranceManager.Services
 
         public async Task UpdateEntranceAsync(int id, EntranceDto dto)
         {
-            var existingEntrance = await _entranceRepository.GetByIdAsync(id);
+            var existingEntrance = await _entranceRepository.GetEntranceByIdAsync(id, false);
             if (existingEntrance == null)
                 throw new EntranceNotFoundException(id);
 
@@ -70,7 +73,7 @@ namespace EntranceManager.Services
 
         public async Task DeleteEntranceAsync(int id)
         {
-            var existing = await _entranceRepository.GetByIdAsync(id);
+            var existing = await _entranceRepository.GetEntranceByIdAsync(id, false);
             if (existing == null)
                 throw new EntranceNotFoundException(id);
 
@@ -79,7 +82,7 @@ namespace EntranceManager.Services
 
         public async Task AddUserToEntranceAsync(int entranceId, int userId)
         {
-            var entrance = await _entranceRepository.GetByIdAsync(entranceId)
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(entranceId, true)
                           ?? throw new EntranceNotFoundException(entranceId);
             var user = await _userRepository.GetByIdAsync(userId)
                        ?? throw new UserNotFoundException(userId);
@@ -97,7 +100,7 @@ namespace EntranceManager.Services
 
         public async Task RemoveUserFromEntrance(int entranceId, int userId)
         {
-            var entrance = await _entranceRepository.GetByIdAsync(entranceId);
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(entranceId, false);
             if (entrance == null)
                 throw new EntranceNotFoundException(entranceId);
 

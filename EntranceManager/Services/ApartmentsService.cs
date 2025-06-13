@@ -1,5 +1,6 @@
 ﻿using AspNetCoreDemo.Helpers;
 using EntranceManager.Exceptions;
+using EntranceManager.Helpers;
 using EntranceManager.Models;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Repositories;
@@ -28,11 +29,25 @@ namespace EntranceManager.Services
             return await _apartmentRepository.GetAllAsync();
         }
 
-        public async Task<IEnumerable<ApartmentResponseDto>> GetAllApartmentsDetailsAsync()
+        public async Task<IEnumerable<ApartmentResponseDto>> GetAllApartmentsDetailsAsync(string username)
         {
-            var apartments = await _apartmentRepository.GetAllWithDetailsAsync();
+            var currentUser = await _userRepository.GetByUsernameAsync(username)
+                ?? throw new UserNotFoundException(username);
 
-            return apartments.Select(a => _mapper.Map(a));
+            var apartments = await _apartmentRepository.GetAllWithDetailsAsync(currentUser);
+            var entrances = await _entranceRepository.GetAllEntrancesAsync(currentUser, false);
+
+            return apartments.Select(apartment =>
+            {
+                var entrance = entrances.FirstOrDefault(e => e.Id == apartment.EntranceId);
+
+                var residentsCount = CalculateHelper.CalculateResidents(
+                    apartment.ApartmentUsers?.Count ?? 0,
+                    apartment.NumberOfChildren,
+                    entrance?.CountChildrenAsResidents ?? false);
+
+                return _mapper.Map(apartment, residentsCount);
+            }).ToList();
         }
 
         public async Task<ApartmentResponseDto?> GetApartmentDetailsByIdAsync(int id)
@@ -42,7 +57,15 @@ namespace EntranceManager.Services
             if (apartment == null)
                 throw new ApartmentNotFoundException(id);
 
-            return _mapper.Map(apartment);
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(apartment.EntranceId, false)
+                ?? throw new EntranceNotFoundException(apartment.EntranceId);
+
+            var residentsCount = CalculateHelper.CalculateResidents(
+                apartment.ApartmentUsers?.Count ?? 0,
+                apartment.NumberOfChildren,
+                entrance?.CountChildrenAsResidents ?? false);
+
+            return _mapper.Map(apartment, residentsCount);
         }
 
         public async Task<Apartment?> GetApartmentByIdAsync(int id)
@@ -70,7 +93,7 @@ namespace EntranceManager.Services
             if (entranceUser == null)
                 throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
 
-            var entrance = await _entranceRepository.GetByIdAsync(apartment.EntranceId);
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(apartment.EntranceId, false);
             if (entrance == null)
                 throw new EntranceNotFoundException(apartment.EntranceId);
 
@@ -87,7 +110,7 @@ namespace EntranceManager.Services
             if (entranceUser == null)
                 throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
 
-            var entrance = await _entranceRepository.GetByIdAsync(dto.EntranceId);
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(dto.EntranceId, false);
             if (entrance == null)
                 throw new EntranceNotFoundException(dto.EntranceId);
 

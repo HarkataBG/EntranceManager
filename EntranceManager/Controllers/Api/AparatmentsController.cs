@@ -26,28 +26,32 @@ namespace EntranceManager.Controllers.Api
 
         [HttpGet]
         [Authorize]
-        public async Task<IEnumerable<ApartmentResponseDto>> GetAccessibleApartmentsAsync()
+        public async Task<ActionResult<IEnumerable<ApartmentResponseDto>>> GetAccessibleApartmentsAsync()
         {
-            var allApartments = await _apartmentService.GetAllApartmentsDetailsAsync();
-
-            var username = User.Identity?.Name;
-            if (string.IsNullOrEmpty(username))
-                throw new UnauthorizedAccessException("User is not authenticated.");
-
-            var currentUser = await _usersService.GetByUsernameAsync(username);
-
-            return currentUser.Role switch
+            try
             {
-                nameof(UserRole.Administrator) => allApartments,
+                var username = User.Identity?.Name;
+                if (string.IsNullOrEmpty(username))
+                    throw new UnauthorizedAccessException("User is not authenticated.");
 
-                nameof(UserRole.EntranceManager) => allApartments
-                    .Where(a => currentUser.ManagedEntrances.Any(e => e.Id == a.Entrance.Id)),
+                var apartments = await _apartmentService.GetAllApartmentsDetailsAsync(username);
 
-                _ => allApartments
-                    .Where(a =>
-                        a.Owner.Id == currentUser.Id ||
-                        a.Residents.Any(r => r.Id == currentUser.Id))
-            };
+                return Ok(apartments);
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case UnauthorizedAccessException _:
+                        return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
+                    case OwnerNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+
         }
 
 

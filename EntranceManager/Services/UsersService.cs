@@ -22,7 +22,7 @@ namespace EntranceManager.Services
             var user = await _userRepository.GetByIdAsync(userId)
                        ?? throw new UserNotFoundException(userId);
 
-            var entrance = await _entranceRepository.GetByIdAsync(entranceId)
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(entranceId, false)
                            ?? throw new EntranceNotFoundException(entranceId);
 
             entrance.ManagerUserId = user.Id;
@@ -35,7 +35,7 @@ namespace EntranceManager.Services
 
         public async Task DemoteFromManagerAsync(int entranceId)
         {
-            var entrance = await _entranceRepository.GetByIdAsync(entranceId)
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(entranceId, false)
                            ?? throw new EntranceNotFoundException(entranceId);
 
             if (entrance.ManagerUserId == null)
