@@ -26,5 +26,7 @@ namespace EntranceManager.Repositories
         Task<EntranceUser> GetEntranceUserAsync(int userId, int entranceId);
 
         Task RemoveUserFromEntranceAsync(EntranceUser apartmentUser);
+
+        Task<bool> AnyManagedEntrancesAsync(int userId, int excludeEntranceId);
     }
 }

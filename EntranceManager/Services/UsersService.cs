@@ -1,4 +1,5 @@
-﻿using EntranceManager.Models;
+﻿using EntranceManager.Exceptions;
+using EntranceManager.Models;
 using EntranceManager.Repositories;
 using EntranceManager.Services.Contracts;
 using System.Security.Claims;
@@ -19,20 +20,42 @@ namespace EntranceManager.Services
         public async Task PromoteToManagerAsync(int userId, int entranceId)
         {
             var user = await _userRepository.GetByIdAsync(userId)
-                       ?? throw new Exception("User not found.");
+                       ?? throw new UserNotFoundException(userId);
 
             var entrance = await _entranceRepository.GetByIdAsync(entranceId)
-                           ?? throw new Exception("Entrance not found.");
-
-
-            var entranceUser = await _entranceRepository.GetEntranceUserAsync(userId, entranceId);
-            if (entranceUser == null)
-                throw new UnauthorizedAccessException("Owner must be a resident of the entrance.");
+                           ?? throw new EntranceNotFoundException(entranceId);
 
             entrance.ManagerUserId = user.Id;
 
+            user.Role = nameof(UserRole.EntranceManager);
+
             await _userRepository.UpdateAsync(user);
             await _entranceRepository.UpdateAsync(entrance);
+        }
+
+        public async Task DemoteFromManagerAsync(int entranceId)
+        {
+            var entrance = await _entranceRepository.GetByIdAsync(entranceId)
+                           ?? throw new EntranceNotFoundException(entranceId);
+
+            if (entrance.ManagerUserId == null)
+                throw new ManagerNotFoundException(entranceId);
+
+            var managerUser = await _userRepository.GetByIdAsync(entrance.ManagerUserId.Value);
+            if (managerUser == null)
+                throw new UserNotFoundException(entrance.ManagerUserId.Value);
+
+            entrance.ManagerUserId = null;
+            await _entranceRepository.UpdateAsync(entrance);
+
+            bool isManagerElsewhere = await _entranceRepository
+            .AnyManagedEntrancesAsync(managerUser.Id, excludeEntranceId: entranceId);
+
+            if (!isManagerElsewhere && managerUser.Role == nameof(UserRole.EntranceManager))
+            {
+                managerUser.Role = nameof(UserRole.User); 
+                await _userRepository.UpdateAsync(managerUser);
+            }
         }
 
         public async Task<User> GetByUsernameAsync(string username)

@@ -1,4 +1,5 @@
-﻿using EntranceManager.Models;
+﻿using EntranceManager.Exceptions;
+using EntranceManager.Models;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
@@ -22,8 +23,46 @@ namespace EntranceManager.Controllers.Api
         [HttpPost("promote")]
         public async Task<IActionResult> PromoteEntranceManager([FromBody] EntranceManagerDto dto)
         {
-            await _usersService.PromoteToManagerAsync(dto.UserId, dto.EntranceId);
-            return Ok("User promoted to Entrance Manager successfully.");
+            try
+            {
+                await _usersService.PromoteToManagerAsync(dto.UserId, dto.EntranceId);
+                return Ok("User promoted to Entrance Manager successfully.");
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceNotFoundException _:
+                    case UserNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
+        }
+        [Authorize(Roles = nameof(UserRole.Administrator))]
+        [HttpPost("demote/{entranceId}")]
+        public async Task<IActionResult> DemoteEntranceManager(int entranceId)
+        {
+            try
+            {
+                await _usersService.DemoteFromManagerAsync(entranceId);
+                return Ok("User demoted from Entrance Manager successfully.");
+            }
+            catch (Exception ex)
+            {
+                switch (ex)
+                {
+                    case EntranceNotFoundException _:
+                    case ManagerNotFoundException _:
+                    case UserNotFoundException _:
+                        return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+
+                    default:
+                        throw;
+                }
+            }
         }
 
     }

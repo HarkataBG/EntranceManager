@@ -9,12 +9,10 @@ namespace EntranceManager.Repositories
     public class EntranceRepository : IEntranceRepository
     {
         private readonly ApplicationContext _dbContext;
-        private readonly ModelMapper _mapper;
 
-        public EntranceRepository(ApplicationContext context, ModelMapper mapper)
+        public EntranceRepository(ApplicationContext context)
         {
             _dbContext = context;
-            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Entrance>> GetAllAsync()
@@ -93,6 +91,12 @@ namespace EntranceManager.Repositories
         {
             _dbContext.EntranceUsers.Remove(entranceUser);
             await _dbContext.SaveChangesAsync();
+        }
+
+        public async Task<bool> AnyManagedEntrancesAsync(int userId, int excludeEntranceId)
+        {
+            return await _dbContext.Entrances
+                .AnyAsync(e => e.ManagerUserId == userId && e.Id != excludeEntranceId);
         }
     }
 }
