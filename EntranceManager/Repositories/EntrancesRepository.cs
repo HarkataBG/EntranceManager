@@ -69,15 +69,9 @@ namespace EntranceManager.Repositories
             {
                 query = _dbContext.Entrances;
             }
-            return await query.FirstOrDefaultAsync();
+            return await query.FirstOrDefaultAsync(e => e.Id == id);
 
-        }
-
-        public async Task<Entrance?> GetByIdAsync(int id)
-        {
-            return await _dbContext.Entrances
-                .FirstOrDefaultAsync(e => e.Id == id);
-        }
+        }        
 
         public async Task<Entrance?> GetEntranceByNameAndAdress(string entranceName, string address)
         {
