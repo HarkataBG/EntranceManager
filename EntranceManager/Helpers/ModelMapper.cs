@@ -39,13 +39,15 @@ namespace AspNetCoreDemo.Helpers
                     PostCode = apartment.Entrance.PostCode,
                     EntranceName = apartment.Entrance.EntranceName
                 },
-                Residents = apartment.ApartmentUsers
-           .Select(au => new ResidentDto
-           {
-               Id = au.User.Id,
-               Username = au.User.Username
-           })
-           .ToList()
+                Residents = apartment.ApartmentUsers?
+                   .Select(au => new ResidentDto
+                   {
+                       Id = au.User.Id,
+                       Username = au.User.Username
+                   })
+                   .ToList() ?? new List<ResidentDto>(),
+               NumberOfChildren = apartment.NumberOfChildren,
+               NumberOfPets = apartment.NumberOfPets
             };
         }
 
@@ -99,6 +101,57 @@ namespace AspNetCoreDemo.Helpers
                  })
                  .ToList() ?? new List<ResidentDto>()
             };
+        }
+
+        public Fee Map(FeeDto dto)
+        {
+            return new Fee
+            {
+                Name = dto.Name,
+                Description = dto.Description,
+                Amount = dto.Amount,
+                EntranceId = dto.EntranceId
+            };
+        }
+
+        public FeeResponseDto Map(Fee fee)
+        {
+            return new FeeResponseDto
+            {
+                Id = fee.Id,
+                Name = fee.Name,
+                Description = fee.Description,
+                Amount = fee.Amount,
+                Entrance = new EntranceSummaryDto
+                {
+                    Id = fee.Entrance?.Id ?? 0,
+                    City = fee.Entrance?.City ?? string.Empty,
+                    Address = fee.Entrance?.Address ?? string.Empty,
+                    PostCode = fee.Entrance?.PostCode ?? 0,
+                    EntranceName = fee.Entrance?.EntranceName ?? string.Empty
+                },
+                ApartmentFees = fee.ApartmentFees?
+                 .Where(af => af.Apartment != null)
+                 .Select(af => new ApartmentFeeDto
+                 {
+                     Id = af.Id,
+                     ApartmentId = af.ApartmentId,
+                     IsPaid = af.IsPaid,
+                     PaymentDate = af.PaymentDate
+                 })
+                 .ToList() ?? new List<ApartmentFeeDto>()
+            };
+        }
+
+        public void Map(FeeDto dto, Fee? fee = null)
+        {
+            if (fee == null)
+                fee = new Fee();
+
+            fee.Name = dto.Name;
+            fee.Description = dto.Description;
+            fee.Amount = dto.Amount;
+            fee.EntranceId = dto.EntranceId;
         }
     }
 }

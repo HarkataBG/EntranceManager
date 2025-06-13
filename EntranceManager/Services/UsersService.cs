@@ -82,7 +82,7 @@ namespace EntranceManager.Services
                 if (user.Role == "EntranceManager" &&
                     !user.ManagedEntrances.Any(e => e.Id == entranceId))
                 {
-                    throw new UnauthorizedAccessException("You cannot manage apartments outside your assigned entrance.");
+                    throw new UnauthorizedAccessException("You cannot manage apartments outside your assigned entrances.");
                 }
             }
         }

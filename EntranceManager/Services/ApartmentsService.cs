@@ -4,6 +4,7 @@ using EntranceManager.Models;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Repositories;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Identity.Client;
 
 namespace EntranceManager.Services
 {

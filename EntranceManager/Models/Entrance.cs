@@ -11,6 +11,7 @@ public class Entrance
     public int? ManagerUserId { get; set; } 
     public User ManagerUser { get; set; }
 
+    public bool CountChildrenAsResidents { get; set; }
     public ICollection<Apartment> Apartments { get; set; }
     public ICollection<EntranceUser> EntranceUsers { get; set; }
 }

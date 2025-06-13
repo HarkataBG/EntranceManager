@@ -1,6 +1,7 @@
 using AspNetCoreDemo.Helpers;
 using EntranceManager.Data;
 using EntranceManager.Repositories;
+using EntranceManager.Repositories.Contracts;
 using EntranceManager.Services;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -53,12 +54,14 @@ namespace EntranceManager
             builder.Services.AddScoped<IApartmentRepository, ApartmentRepository>();
             builder.Services.AddScoped<IEntranceRepository, EntranceRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
+            builder.Services.AddScoped<IFeeRepository, FeeRepository>();
 
             //Services
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
             builder.Services.AddScoped<IEntranceService, EntranceService>();
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUsersService, UsersService>();
+            builder.Services.AddScoped<IFeesService, FeesService>();
 
             //Helpers
             builder.Services.AddScoped<ModelMapper>();

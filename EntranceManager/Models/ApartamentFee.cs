@@ -6,11 +6,12 @@
 
         public int ApartmentId { get; set; }
         public Apartment Apartment { get; set; }
-
         public int FeeId { get; set; }
         public Fee Fee { get; set; }
-
         public bool IsPaid { get; set; } = false;
         public DateTime? PaymentDate { get; set; }
+
+        public decimal AmountForApartment { get; set; }
+        public decimal AmountAlreadyPaid { get; set; }
     }
 }

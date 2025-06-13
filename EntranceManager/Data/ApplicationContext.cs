@@ -25,6 +25,14 @@ namespace EntranceManager.Data
                         .Property(f => f.Amount)
                         .HasPrecision(18, 2);
 
+            modelBuilder.Entity<ApartmentFee>()
+                       .Property(f => f.AmountForApartment)
+                       .HasPrecision(18, 2);
+
+            modelBuilder.Entity<ApartmentFee>()
+                      .Property(f => f.AmountAlreadyPaid)
+                      .HasPrecision(18, 2);
+
             modelBuilder.Entity<Apartment>()
                .HasOne(a => a.OwnerUser)
                .WithMany(u => u.OwnedApartments)

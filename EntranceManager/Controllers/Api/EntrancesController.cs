@@ -26,12 +26,12 @@ namespace EntranceManager.Controllers.Api
         [HttpGet]
         [Authorize]
         public async Task<IEnumerable<EntranceResponseDto>> GetAccessibleEntrancesAsync()
-        {
-            var allEntrances = await _entranceService.GetAllEntrancesDetailsAsync();
-
+        {          
             var username = User.Identity?.Name;
             if (string.IsNullOrEmpty(username))
                 throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var allEntrances = await _entranceService.GetAllEntrancesDetailsAsync();
 
             var currentUser = await _usersService.GetByUsernameAsync(username);
 
@@ -112,10 +112,10 @@ namespace EntranceManager.Controllers.Api
         {
             try
             {
-                var existingApartment = await _entranceService.GetEntranceByIdAsync(id);
-                if (existingApartment == null)
+                var existingEntrance = await _entranceService.GetEntranceByIdAsync(id);
+                if (existingEntrance == null)
                 {
-                    throw new ApartmentNotFoundException(id);
+                    throw new EntranceNotFoundException(id);
                 }
 
                 await _entranceService.DeleteEntranceAsync(id);
@@ -163,7 +163,7 @@ namespace EntranceManager.Controllers.Api
         }
 
         [HttpDelete("{entranceId}/users/{userId}")]
-        [Authorize]
+        [Authorize(Roles = $"{nameof(UserRole.Administrator)}")]
         public async Task<IActionResult> RemoveUserFromEntrance(int entranceId, int userId)
         {
             try
