@@ -55,6 +55,7 @@ namespace EntranceManager
             builder.Services.AddScoped<IEntranceRepository, EntranceRepository>();
             builder.Services.AddScoped<IUserRepository, UserRepository>();
             builder.Services.AddScoped<IFeeRepository, FeeRepository>();
+            builder.Services.AddScoped<IPaymentRepository, PaymentRepository>();
 
             //Services
             builder.Services.AddScoped<IApartmentService, ApartmentService>();
@@ -62,6 +63,7 @@ namespace EntranceManager
             builder.Services.AddScoped<IAuthService, AuthService>();
             builder.Services.AddScoped<IUsersService, UsersService>();
             builder.Services.AddScoped<IFeesService, FeesService>();
+            builder.Services.AddScoped<IPaymentsService, PaymentsService>();
 
             //Helpers
             builder.Services.AddScoped<ModelMapper>();

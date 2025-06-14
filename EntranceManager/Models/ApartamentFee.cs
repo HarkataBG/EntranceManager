@@ -13,5 +13,7 @@
 
         public decimal AmountForApartment { get; set; }
         public decimal AmountAlreadyPaid { get; set; }
+
+        public ICollection<Payment> Payments { get; set; } = new List<Payment>();
     }
 }

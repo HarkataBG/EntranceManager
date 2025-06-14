@@ -63,12 +63,16 @@ namespace EntranceManager.Services
 
         public async Task UpdateEntranceAsync(int id, EntranceDto dto)
         {
-            var existingEntrance = await _entranceRepository.GetEntranceByIdAsync(id, false);
-            if (existingEntrance == null)
+            var existingEntrance = await _entranceRepository.GetEntranceByNameAndAdress(dto.EntranceName, dto.Address);
+            if (existingEntrance != null)
+                throw new EntranceAlreadyExistsException(dto.EntranceName, dto.Address);
+
+            var entrance = await _entranceRepository.GetEntranceByIdAsync(id, false);
+            if (entrance == null)
                 throw new EntranceNotFoundException(id);
 
-            _mapper.Map(dto, existingEntrance);
-            await _entranceRepository.UpdateAsync(existingEntrance);
+            _mapper.Map(dto, entrance);
+            await _entranceRepository.UpdateAsync(entrance);
         }
 
         public async Task DeleteEntranceAsync(int id)

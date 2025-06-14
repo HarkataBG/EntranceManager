@@ -1,0 +1,50 @@
+﻿using Azure.Core;
+using EntranceManager.Exceptions;
+using EntranceManager.Models;
+using EntranceManager.Models.Mappers;
+using EntranceManager.Repositories.Contracts;
+using EntranceManager.Services.Contracts;
+
+namespace EntranceManager.Services
+{
+    public class PaymentsService : IPaymentsService
+    {
+        private readonly IPaymentRepository _paymentRepository;
+
+        public PaymentsService(IPaymentRepository paymentRepository)
+        {
+            _paymentRepository = paymentRepository;
+        }
+
+        public async Task ProcessPaymentAsync(PaymentDto dto)
+        {
+            var apartmentFee = await _paymentRepository.GetApartmentFeeWithPaymentsAsync(dto.ApartmentId, dto.FeeId);
+            if (apartmentFee == null)
+                throw new FeeNotFoundException(dto.FeeId);
+
+            if (dto.Amount <= 0 || dto.Amount > apartmentFee.AmountForApartment)
+                throw new InvalidOperationException("Sum is not valid");
+
+            var payment = new Payment
+            {
+                ApartmentFeeId = apartmentFee.Id,
+                AmountPaid = dto.Amount,
+                PaymentDate = DateTime.UtcNow,
+                PaymentMethod = dto.PaymentMethod
+            };
+
+            await _paymentRepository.AddPaymentAsync(payment);
+
+            var totalPaid = apartmentFee.Payments.Sum(p => p.AmountPaid) + dto.Amount;
+
+            if (totalPaid >= apartmentFee.AmountForApartment)
+            {
+                apartmentFee.IsPaid = true;
+                apartmentFee.PaymentDate = DateTime.UtcNow;
+            }
+                apartmentFee.AmountAlreadyPaid = totalPaid;
+                await _paymentRepository.UpdateApartmentFeeAsync(apartmentFee);
+            
+        }
+    }
+}

@@ -16,6 +16,7 @@ namespace EntranceManager.Data
         public DbSet<ApartmentFee> ApartmentFees { get; set; }
         public DbSet<ApartmentUser> ApartmentUsers { get; set; }
         public DbSet<EntranceUser> EntranceUsers { get; set; }
+        public DbSet<Payment> Payments { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -32,6 +33,10 @@ namespace EntranceManager.Data
             modelBuilder.Entity<ApartmentFee>()
                       .Property(f => f.AmountAlreadyPaid)
                       .HasPrecision(18, 2);
+
+            modelBuilder.Entity<Payment>()
+                    .Property(f => f.AmountPaid)
+                    .HasPrecision(18, 2);
 
             modelBuilder.Entity<Apartment>()
                .HasOne(a => a.OwnerUser)
