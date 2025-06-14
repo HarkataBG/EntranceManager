@@ -60,7 +60,7 @@ namespace EntranceManager.Services
             var entrance = await _entranceRepository.GetEntranceByIdAsync(dto.EntranceId, false)
                            ?? throw new EntranceNotFoundException(dto.EntranceId);
 
-            var existingFee = await _feeRepository.GetByNameAsync(dto.Name);
+            var existingFee = await _feeRepository.GetByNameAsync(dto.Name, dto.EntranceId);
             if (existingFee != null)
                 throw new FeeAlreadyExistsException(dto.Name);
 

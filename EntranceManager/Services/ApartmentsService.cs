@@ -102,6 +102,10 @@ namespace EntranceManager.Services
 
         public async Task UpdateApartmentAsync(int apartmentId, ApartmentDto dto)
         {
+            var existingApartment = await _apartmentRepository.GetApartmentByNumber(dto.Number, dto.EntranceId);
+            if (existingApartment != null)
+                throw new ApartmentAlreadyExistsException(dto.Number, dto.EntranceId);
+
             var owner = await _userRepository.GetByIdAsync(dto.OwnerUserId);
             if (owner == null)
                 throw new OwnerNotFoundException(dto.OwnerUserId);

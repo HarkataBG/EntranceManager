@@ -53,9 +53,10 @@ namespace EntranceManager.Repositories
              .FirstOrDefaultAsync(f => f.Id == id);
         }
 
-        public async Task<Fee> GetByNameAsync(string name)
+        public async Task<Fee> GetByNameAsync(string name, int entranceId)
         {
             return await _dbContext.Fees
+                        .Where(a => a.EntranceId == entranceId)
                         .FirstOrDefaultAsync(fe =>
                             fe.Name.ToLower() == name);
         }
