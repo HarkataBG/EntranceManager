@@ -6,5 +6,6 @@
         public string Description { get; set; }
         public decimal Amount { get; set; }
         public int EntranceId { get; set; }
+        public FeeDetails FeeDetails { get; set; }
     }
 }

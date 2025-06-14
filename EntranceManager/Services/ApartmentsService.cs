@@ -130,7 +130,7 @@ namespace EntranceManager.Services
 
         public async Task AddUserToApartmentAsync(int apartmentId, int userId)
         {
-            var apartment = await _apartmentRepository.GetByIdAsync(apartmentId);
+            var apartment = await _apartmentRepository.GetByIdWithApartmentUsers(apartmentId);
             if (apartment == null)
                 throw new ApartmentNotFoundException(apartmentId);
 

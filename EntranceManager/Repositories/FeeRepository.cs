@@ -3,6 +3,7 @@ using EntranceManager.Models;
 using EntranceManager.Repositories.Contracts;
 using Microsoft.EntityFrameworkCore;
 using System;
+using System.Net;
 
 namespace EntranceManager.Repositories
 {
@@ -52,6 +53,13 @@ namespace EntranceManager.Repositories
              .FirstOrDefaultAsync(f => f.Id == id);
         }
 
+        public async Task<Fee> GetByNameAsync(string name)
+        {
+            return await _dbContext.Fees
+                        .FirstOrDefaultAsync(fe =>
+                            fe.Name.ToLower() == name);
+        }
+
         public async Task AddAsync(Fee fee)
         {
             await _dbContext.Fees.AddAsync(fee);
@@ -72,6 +80,12 @@ namespace EntranceManager.Repositories
                 _dbContext.Fees.Remove(fee);
                 await _dbContext.SaveChangesAsync();
             }
+        }
+
+        public async Task AddRangeAsync(IEnumerable<ApartmentFee> apartmentFees)
+        {
+            await _dbContext.ApartmentFees.AddRangeAsync(apartmentFees);
+            await _dbContext.SaveChangesAsync();
         }
     }
 

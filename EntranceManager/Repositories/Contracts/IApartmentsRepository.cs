@@ -25,9 +25,13 @@ namespace EntranceManager.Repositories
 
         Task<Apartment> GetApartmentByNumber(int number, int entranceId);
 
+        Task<List<Apartment>> GetByEntranceIdAsync(int entranceId);
+
         Task<List<Apartment>> GetAllWithDetailsAsync(User currentUser);
 
         Task<Apartment> GetWithDetailsByIdAsync(int id);
+
+        Task<Apartment> GetByIdWithApartmentUsers(int id);
 
         Task<ApartmentUser> GetApartmentUserAsync(int userId, int apartmentId);
 

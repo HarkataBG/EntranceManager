@@ -10,17 +10,23 @@ namespace EntranceManager.Repositories
     public class ApartmentRepository : IApartmentRepository
     {
         private readonly ApplicationContext _dbContext;
-        private readonly ModelMapper _mapper;
 
-        public ApartmentRepository(ApplicationContext dbContext, ModelMapper mapper)
+        public ApartmentRepository(ApplicationContext dbContext)
         {
             _dbContext = dbContext;
-            _mapper = mapper;
         }
 
         public async Task<IEnumerable<Apartment>> GetAllAsync()
         {
             return await _dbContext.Apartments.ToListAsync();
+        }
+
+        public async Task<List<Apartment>> GetByEntranceIdAsync(int entranceId)
+        {
+            return await _dbContext.Apartments
+                .Where(a => a.EntranceId == entranceId)
+                  .Include(a => a.ApartmentUsers)
+                .ToListAsync();
         }
 
         public async Task<List<Apartment>> GetAllWithDetailsAsync(User currentUser)
@@ -68,6 +74,14 @@ namespace EntranceManager.Repositories
                     .ThenInclude(au => au.User)
                 .Include(a => a.OwnerUser)
                 .Include(a => a.Entrance)
+                .FirstOrDefaultAsync(a => a.Id == id);
+        }
+
+        public async Task<Apartment> GetByIdWithApartmentUsers(int id)
+        {
+            return await _dbContext.Apartments
+                  .Include(a => a.ApartmentUsers)
+                      .ThenInclude(au => au.User)
                 .FirstOrDefaultAsync(a => a.Id == id);
         }
 

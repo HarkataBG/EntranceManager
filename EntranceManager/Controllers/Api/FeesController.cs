@@ -1,4 +1,5 @@
 ﻿using EntranceManager.Exceptions;
+using EntranceManager.Exceptions.EntranceManager.Exceptions;
 using EntranceManager.Models;
 using EntranceManager.Models.Mappers;
 using EntranceManager.Services;
@@ -82,6 +83,8 @@ namespace EntranceManager.Controllers.Api
                         return StatusCode(StatusCodes.Status401Unauthorized, ex.Message);
                     case EntranceNotFoundException _:
                         return StatusCode(StatusCodes.Status404NotFound, ex.Message);
+                    case FeeAlreadyExistsException _:
+                        return StatusCode(StatusCodes.Status409Conflict, ex.Message);
 
                     default:
                         throw;
@@ -141,5 +144,7 @@ namespace EntranceManager.Controllers.Api
                 }
             }
         }
+
+
     }
 }
