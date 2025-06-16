@@ -1,0 +1,31 @@
+﻿@model IEnumerable<ApartmentResponseDto>
+
+<h2>Списък с апартаменти</h2>
+
+<a asp-action="Create" class="btn btn-primary mb-2">Добави апартамент</a>
+
+<table class="table table-bordered">
+    <thead>
+        <tr>
+            <th>Номер</th>
+            <th>Вход</th>
+            <th>Собственик</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var apt in Model)
+        {
+            <tr>
+                <td>@apt.Number</td>
+                <td>@apt.Entrance.EntranceName</td>
+                <td>@apt.Owner.Username</td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@apt.Id">Детайли</a> |
+                    <a asp-action="Edit" asp-route-id="@apt.Id">Редакция</a> |
+                    <a asp-action="Delete" asp-route-id="@apt.Id">Изтриване</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

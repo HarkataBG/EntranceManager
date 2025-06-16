@@ -4,6 +4,7 @@ using EntranceManager.Repositories;
 using EntranceManager.Repositories.Contracts;
 using EntranceManager.Services;
 using EntranceManager.Services.Contracts;
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
@@ -34,19 +35,24 @@ namespace EntranceManager
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
             })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidateLifetime = true,
-                    ValidateIssuerSigningKey = true,
-                    ValidIssuer = "EntranceManager",
-                    ValidAudience = "EntranceUsers",
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
-                };
-            });
+             .AddCookie(options =>
+             {
+                 options.LoginPath = "/AuthMvc/Login";
+                 options.LogoutPath = "/AuthMvc/Logout";
+             })
+             .AddJwtBearer(options =>
+             {
+                 options.TokenValidationParameters = new TokenValidationParameters
+                 {
+                     ValidateIssuer = true,
+                     ValidateAudience = true,
+                     ValidateLifetime = true,
+                     ValidateIssuerSigningKey = true,
+                     ValidIssuer = "EntranceManager",
+                     ValidAudience = "EntranceUsers",
+                     IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(key))
+                 };
+             });
 
             builder.Services.AddAuthorization();
 
@@ -68,6 +74,7 @@ namespace EntranceManager
             //Helpers
             builder.Services.AddScoped<ModelMapper>();
 
+            builder.Services.AddHttpClient();
 
             var app = builder.Build();
 
@@ -83,11 +90,28 @@ namespace EntranceManager
 
             app.UseRouting();
 
+            app.Use(async (context, next) =>
+            {
+                var token = context.Request.Cookies["auth_token"];
+                if (!string.IsNullOrEmpty(token))
+                {
+                    context.Request.Headers.Append("Authorization", "Bearer " + token);
+                }
+
+                await next();
+            });
+
             app.UseAuthentication();
 
             app.UseAuthorization();
 
-            app.MapControllerRoute(
+            if (app.Environment.IsDevelopment())
+            {
+                app.UseDeveloperExceptionPage();
+            }
+
+
+                app.MapControllerRoute(
                 name: "default",
                 pattern: "{controller=Home}/{action=Index}/{id?}");
 

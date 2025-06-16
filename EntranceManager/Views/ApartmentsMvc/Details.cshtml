@@ -1,0 +1,48 @@
+﻿@model ApartmentResponseDto
+
+@{
+    ViewData["Title"] = "Apartment Details";
+}
+
+<h2>Детайли за апартамента</h2>
+
+<div class="card shadow-sm p-4 mb-4 bg-light">
+    <dl class="row">
+        <dt class="col-sm-3">Номер</dt>
+        <dd class="col-sm-9">@Model.Number</dd>
+
+        <dt class="col-sm-3">Вход</dt>
+        <dd class="col-sm-9">@Model.Entrance.Id</dd>
+
+        <dt class="col-sm-3">Собственик</dt>
+        <dd class="col-sm-9">@Model.Owner.Username</dd>
+
+        <dt class="col-sm-3">Бройка живуващи</dt>
+        <dd class="col-sm-9">@Model.NumberOfLivingPeople</dd>
+
+        <dt class="col-sm-3">Бройка деца</dt>
+        <dd class="col-sm-9">@Model.NumberOfChildren</dd>
+
+        <dt class="col-sm-3">Бройка домашни любимци</dt>
+        <dd class="col-sm-9">@Model.NumberOfPets</dd>
+
+        <dt class="col-sm-3">Живуващи</dt>
+        <dd class="col-sm-9">
+            @if (Model.Residents != null && Model.Residents.Any())
+            {
+                <ul>
+                    @foreach (var resident in Model.Residents)
+                    {
+                        <li>@resident.Username</li>
+                    }
+                </ul>
+            }
+            else
+            {
+                <p>Няма живуващи.</p>
+            }
+        </dd>
+    </dl>
+</div>
+
+<a asp-action="Index" class="btn btn-secondary">Обратно към всички апартаменти</a>
