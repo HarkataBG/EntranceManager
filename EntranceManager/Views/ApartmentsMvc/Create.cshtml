@@ -71,7 +71,7 @@
 
     <script>
         (function () {
-            var entrancesData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(entrances));
+            var entrancesData = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(ViewBag.EntrancesData));
 
             var entranceSelect = document.getElementById('entranceSelect');
             var ownerSelect = document.getElementById('ownerSelect');

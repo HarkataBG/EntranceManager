@@ -33,7 +33,13 @@
                 <ul>
                     @foreach (var resident in Model.Residents)
                     {
-                        <li>@resident.Username</li>
+                        <li>
+                            @resident.Username
+                            <form asp-action="RemoveUser" method="post" asp-route-apartmentId="@Model.Id" asp-route-userId="@resident.Id"
+                                  onsubmit="return confirm('Сигурни ли сте, че искате да премахнете този живущ?');" style="display:inline;">
+                                <button type="submit" class="btn btn-danger btn-sm ms-2">Премахни</button>
+                            </form>
+                        </li>
                     }
                 </ul>
             }
@@ -44,5 +50,24 @@
         </dd>
     </dl>
 </div>
+
+<h3>Добави живущ</h3>
+<form asp-action="AddUser" method="post" asp-route-apartmentId="@Model.Id" class="mb-4">
+    <div class="mb-3">
+        <label for="userId" class="form-label">Изберете живущ</label>
+        <select id="userId" name="userId" class="form-select" required>
+            <option value="">-- Изберете живущ --</option>
+            @* Populate this list from ViewBag.AvailableUsers *@
+            @if (ViewBag.AvailableUsers != null)
+            {
+                foreach (var user in (IEnumerable<dynamic>)ViewBag.AvailableUsers)
+                {
+                    <option value="@user.Id">@user.Username</option>
+                }
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">Добави</button>
+</form>
 
 <a asp-action="Index" class="btn btn-secondary">Обратно към всички апартаменти</a>

@@ -6,6 +6,7 @@ namespace EntranceManager.Services.Contracts
 {
     public interface IUsersService
     {
+        Task<IEnumerable<User>> GetAllUsersAsync();
         Task PromoteToManagerAsync(int userId, int entranceId);
         Task DemoteFromManagerAsync(int entranceId);
         Task<User> GetByUsernameAsync(string username);

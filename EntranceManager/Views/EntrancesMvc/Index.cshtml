@@ -19,6 +19,7 @@
             <th>Пощенски код</th>
             <th>Брой деца като жители</th>
             <th>Домоуправител</th>
+            <th>Живущи</th>
             <th></th>
         </tr>
     </thead>
@@ -41,12 +42,37 @@
                             if (string.IsNullOrWhiteSpace(username))
                             {
                                 <text>Все още няма избран домоуправител</text>
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <!-- Promote form -->
+                                    <form asp-action="PromoteManager" method="post" class="mt-2">
+                                        <input type="hidden" name="EntranceId" value="@entrance.Id" />
+                                        <select name="UserId" class="form-select form-select-sm mb-1" required>
+                                            <option value="">Изберете потребител</option>
+                                            @foreach (var user in (List<User>)ViewBag.Users)
+                                            {
+                                                <option value="@user.Id">@user.Username</option>
+                                            }
+                                        </select>
+                                        <button type="submit" class="btn btn-success btn-sm">Назначи домоуправител</button>
+                                    </form>
+                                }
                             }
                             else
                             {
                                 <text>@username</text>
+                                @if (User.IsInRole("Administrator"))
+                                {
+                                    <!-- Demote form -->
+                                    <form asp-action="DemoteManager" method="post" asp-route-entranceId="@entrance.Id" onsubmit="return confirm('Сигурни ли сте, че искате да премахнете домоуправителя?');" class="mt-2">
+                                        <button type="submit" class="btn btn-warning btn-sm">Премахни домоуправител</button>
+                                    </form>
+                                }
                             }
                         }
+                    </td>
+                    <td>
+                        <a asp-action="Details" asp-route-id="@entrance.Id" class="btn btn-info btn-sm">Потребители</a>
                     </td>
                     <td>
                         <a asp-action="Edit" asp-route-id="@entrance.Id" class="btn btn-primary btn-sm">Редактирай</a>

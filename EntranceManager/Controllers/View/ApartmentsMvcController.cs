@@ -30,9 +30,19 @@ namespace EntranceManager.Controllers.Mvc
 
         public async Task<IActionResult> Details(int id)
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
             var apartment = await _apartmentService.GetApartmentDetailsByIdAsync(id);
-            if (apartment == null)
-                return NotFound();
+            if (apartment == null) return NotFound();
+
+            var assignedUserIds = apartment.Residents.Select(r => r.Id).ToList();
+            var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
+
+            var availableUsers = entrances.SelectMany(r => r.Residents).ToList();
+
+            ViewBag.AvailableUsers = availableUsers;
 
             return View(apartment);
         }
@@ -167,6 +177,52 @@ namespace EntranceManager.Controllers.Mvc
             await _usersService.GetAuthorizedUserForEntranceAsync(User, apt.EntranceId);
             await _apartmentService.DeleteApartmentAsync(id);
             return RedirectToAction(nameof(Index));
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> AddUser(int apartmentId, int userId)
+        {
+            try
+            {
+                var apartment = await _apartmentService.GetApartmentByIdAsync(apartmentId);
+                if (apartment == null) return NotFound();
+
+                await _usersService.GetAuthorizedUserForApartmentAsync(User, apartment);
+                await _apartmentService.AddUserToApartmentAsync(apartmentId, userId);
+
+                TempData["SuccessMessage"] = "User added to apartment successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id = apartmentId });
+        }
+
+        [HttpPost]
+        [Authorize]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> RemoveUser(int apartmentId, int userId)
+        {
+            try
+            {
+                var apartment = await _apartmentService.GetApartmentByIdAsync(apartmentId);
+                if (apartment == null) return NotFound();
+
+                await _usersService.GetAuthorizedUserForApartmentAsync(User, apartment);
+                await _apartmentService.RemoveUserFromApartment(apartmentId, userId);
+
+                TempData["SuccessMessage"] = "User removed from apartment successfully.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = ex.Message;
+            }
+
+            return RedirectToAction(nameof(Details), new { id = apartmentId });
         }
     }
 }

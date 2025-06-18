@@ -1,0 +1,55 @@
+﻿@model EntranceResponseDto
+
+<h2>Детайли за вход: @Model.EntranceName</h2>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger">@TempData["ErrorMessage"]</div>
+}
+
+<br />
+<h3>Живущи в този вход</h3>
+
+@if (Model.Residents != null && Model.Residents.Any())
+{
+    <ul>
+        @foreach (var user in Model.Residents)
+        {
+            <li>
+                @user.Username
+                <form asp-action="RemoveUser" method="post" asp-route-entranceId="@Model.Id" asp-route-userId="@user.Id"
+                      onsubmit="return confirm('Сигурни ли сте, че искате да премахнете този потребител?');" style="display:inline;">
+                    <button type="submit" class="btn btn-danger btn-sm ms-2">Премахни</button>
+                </form>
+            </li>
+        }
+    </ul>
+}
+else
+{
+    <p>Няма потребители на този вход.</p>
+}
+
+<h4>Добави потребител</h4>
+<form asp-action="AddUser" method="post" asp-route-entranceId="@Model.Id">
+    <div class="mb-3">
+        <label for="userId" class="form-label">Изберете потребител</label>
+        <select id="userId" name="userId" class="form-select" required>
+            <option value="">-- Изберете потребител --</option>
+            @if (ViewBag.AvailableUsers != null)
+            {
+                @foreach (var user in (IEnumerable<User>)ViewBag.AvailableUsers)
+                {
+                    <option value="@user.Id">@user.Username</option>
+                }
+            }
+        </select>
+    </div>
+    <button type="submit" class="btn btn-success">Добави</button>
+</form>
+
+<a asp-action="Index" class="btn btn-secondary mt-3">Обратно към списъка с входове</a>

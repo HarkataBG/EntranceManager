@@ -17,6 +17,11 @@ namespace EntranceManager.Services
             _entranceRepository = entranceRepository;
         }
 
+        public async Task<IEnumerable<User>> GetAllUsersAsync()
+        {
+            return await _userRepository.GetAllAsync();
+        }
+
         public async Task PromoteToManagerAsync(int userId, int entranceId)
         {
             var user = await _userRepository.GetByIdAsync(userId)
