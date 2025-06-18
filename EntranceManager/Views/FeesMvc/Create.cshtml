@@ -1,114 +1,82 @@
-﻿@model ApartmentDto
+﻿@model EntranceManager.Models.Mappers.FeeDto
 
 @{
-    ViewData["Title"] = "Създаване на апартамент";
-
-    // Cast ViewBag collections to List<SelectListItem>
-    var entrances = ViewBag.Entrances as List<SelectListItem>;
-    var users = ViewBag.Users as List<SelectListItem>;
+    ViewData["Title"] = "Добавяне на нова такса";
 }
 
 <h2>@ViewData["Title"]</h2>
 
-<form asp-action="Create" method="post" class="mt-4">
+<form asp-action="Create" method="post" class="needs-validation" novalidate>
     <div class="mb-3">
-        <label asp-for="Floor" class="form-label">Етаж</label>
-        <input asp-for="Floor" class="form-control" />
-        <span asp-validation-for="Floor" class="text-danger"></span>
+        <label asp-for="Name" class="form-label">Име на таксата</label>
+        <input asp-for="Name" class="form-control" required />
+        <span asp-validation-for="Name" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="Number" class="form-label">Номер на апартамент</label>
-        <input asp-for="Number" class="form-control" />
-        <span asp-validation-for="Number" class="text-danger"></span>
+        <label asp-for="Description" class="form-label">Описание</label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <div class="mb-3">
+        <label asp-for="Amount" class="form-label">Сума</label>
+        <input asp-for="Amount" type="number" step="0.01" min="0" class="form-control" required />
+        <span asp-validation-for="Amount" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
         <label asp-for="EntranceId" class="form-label">Вход</label>
-        <select asp-for="EntranceId" class="form-select" id="entranceSelect" name="EntranceId">
+        <select asp-for="EntranceId" asp-items="ViewBag.Entrances" class="form-select" required>
             <option value="">-- Изберете вход --</option>
-            @if (entrances != null)
-            {
-                foreach (var entrance in entrances)
-                {
-                    <option value="@entrance.Value" selected="@(entrance.Value == Model.EntranceId.ToString() ? "selected" : null)">
-                        @entrance.Text
-                    </option>
-                }
-            }
         </select>
         <span asp-validation-for="EntranceId" class="text-danger"></span>
     </div>
 
+    <h4>Детайли на таксата</h4>
+
     <div class="mb-3">
-        <label asp-for="OwnerUserId" class="form-label">Собственик</label>
-        <select asp-for="OwnerUserId" class="form-select" id="ownerSelect" name="OwnerUserId">
-            <option value="">-- Изберете собственик --</option>
-            @* Owners will be filtered by entrance selection via JavaScript *@
-        </select>
-        <span asp-validation-for="OwnerUserId" class="text-danger"></span>
+        <label asp-for="FeeDetails.ApartmentRatio" class="form-label">Apartment Ratio</label>
+        <input asp-for="FeeDetails.ApartmentRatio" type="number" step="0.01" min="0" class="form-control" />
+        <span asp-validation-for="FeeDetails.ApartmentRatio" class="text-danger"></span>
     </div>
 
     <div class="mb-3">
-        <label asp-for="NumberOfChildren" class="form-label">Брой деца</label>
-        <input asp-for="NumberOfChildren" class="form-control" />
-        <span asp-validation-for="NumberOfChildren" class="text-danger"></span>
+        <label asp-for="FeeDetails.ResidentRatio" class="form-label">Resident Ratio</label>
+        <input asp-for="FeeDetails.ResidentRatio" type="number" step="0.01" min="0" class="form-control" />
+        <span asp-validation-for="FeeDetails.ResidentRatio" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="FeeDetails.IsFeeForCleaning" class="form-check-input" type="checkbox" />
+        <label asp-for="FeeDetails.IsFeeForCleaning" class="form-check-label">Такса за почистване</label>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="FeeDetails.IsFeeWithChildrenReduction" class="form-check-input" type="checkbox" />
+        <label asp-for="FeeDetails.IsFeeWithChildrenReduction" class="form-check-label">Такса с намаление за деца</label>
     </div>
 
     <div class="mb-3">
-        <label asp-for="NumberOfPets" class="form-label">Брой домашни любимци</label>
-        <input asp-for="NumberOfPets" class="form-control" />
-        <span asp-validation-for="NumberOfPets" class="text-danger"></span>
+        <label asp-for="FeeDetails.PetFeePercentage" class="form-label">Процент за домашни любимци</label>
+        <input asp-for="FeeDetails.PetFeePercentage" type="number" step="0.01" min="0" max="100" class="form-control" />
+        <span asp-validation-for="FeeDetails.PetFeePercentage" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Създай</button>
-    <a asp-action="Index" class="btn btn-secondary ms-2">Отказ</a>
+    <div class="mb-3">
+        <label asp-for="FeeDetails.ChildDiscountPercentage" class="form-label">Процент намаление за деца</label>
+        <input asp-for="FeeDetails.ChildDiscountPercentage" type="number" step="0.01" min="0" max="100" class="form-control" />
+        <span asp-validation-for="FeeDetails.ChildDiscountPercentage" class="text-danger"></span>
+    </div>
+
+    <div class="form-check mb-3">
+        <input asp-for="FeeDetails.Normalize" class="form-check-input" type="checkbox" />
+        <label asp-for="FeeDetails.Normalize" class="form-check-label">Нормализиране</label>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Създай такса</button>
 </form>
 
 @section Scripts {
-    @{ await Html.RenderPartialAsync("_ValidationScriptsPartial"); }
-
-    <script>
-        (function () {
-            // Prepare users grouped by EntranceId for filtering
-            var users = @Html.Raw(Newtonsoft.Json.JsonConvert.SerializeObject(users));
-
-            var entranceSelect = document.getElementById('entranceSelect');
-            var ownerSelect = document.getElementById('ownerSelect');
-
-            function populateOwners(entranceId) {
-                ownerSelect.innerHTML = '<option value="">-- Изберете собственик --</option>';
-
-                if (!entranceId) return;
-
-                // Filter users by entrance group name (which holds EntranceId)
-                var filteredUsers = users.filter(function (u) {
-                    return u.Group && u.Group.Name === entranceId;
-                });
-
-                filteredUsers.forEach(function (user) {
-                    var option = document.createElement('option');
-                    option.value = user.Value;
-                    option.textContent = user.Text;
-                    ownerSelect.appendChild(option);
-                });
-
-                // If model has OwnerUserId, select it
-                var selectedOwnerId = '@Model.OwnerUserId';
-                if (selectedOwnerId) {
-                    ownerSelect.value = selectedOwnerId;
-                }
-            }
-
-            // On entrance change, update owners dropdown
-            entranceSelect.addEventListener('change', function () {
-                populateOwners(this.value);
-            });
-
-            // On page load, populate owners if EntranceId is selected (e.g., after validation error)
-            if (entranceSelect.value) {
-                populateOwners(entranceSelect.value);
-            }
-        })();
-    </script>
+    <partial name="_ValidationScriptsPartial" />
 }
