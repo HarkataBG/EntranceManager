@@ -45,7 +45,10 @@
                         <text> | </text>
                         <a asp-action="Edit" asp-route-id="@apt.Id">Редакция</a>
                         <text> | </text>
-                        <a asp-action="Delete" asp-route-id="@apt.Id">Изтриване</a>
+                        <form asp-action="Delete" asp-route-id="@apt.Id" method="post" style="display:inline;"
+                              onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този апартамент?');">
+                            <button type="submit" class="btn btn-danger btn-sm ms-1">Изтрий</button>
+                        </form>
                     }
                 </td>
             </tr>
@@ -75,7 +78,6 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <!-- Fee rows will be injected here -->
                     </tbody>
                 </table>
             </div>

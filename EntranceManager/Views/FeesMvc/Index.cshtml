@@ -28,7 +28,15 @@
                 <td>@fee.Amount</td>
                 <td>@fee.Entrance.EntranceName</td>
                 <td>
-                    <a asp-action="Edit" asp-route-id="@fee.Id" class="btn btn-info btn-sm">Актуализирай</a>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("EntranceManager"))
+                    {
+                        <a asp-action="Edit" asp-route-id="@fee.Id" class="btn btn-info btn-sm">Актуализирай</a>
+                        <form asp-action="Delete" asp-route-id="@fee.Id" method="post" style="display:inline;"
+                              onsubmit="return confirm('Сигурни ли сте, че искате да изтриете тази такса?');">
+                            <button type="submit" class="btn btn-danger btn-sm ms-1">Изтрий</button>
+                        </form>
+                    }
+
                 </td>
             </tr>
         }

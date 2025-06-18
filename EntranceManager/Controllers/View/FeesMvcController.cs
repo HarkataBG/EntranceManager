@@ -65,30 +65,22 @@ namespace EntranceManager.Controllers
         [HttpGet]
         public async Task<IActionResult> Edit(int id)
         {
-            var fee = await _feesService.GetByIdAsync(id);
-            if (fee == null)
-            {
-                return NotFound();
-            }
+            var fee = await _feesService.GetFeeDetailsByIdAsync(id);
+            if (fee == null) return NotFound();
 
-            await PopulateEntrancesDropdownAsync(fee.EntranceId);
-
+            await PopulateEntrancesDropdownAsync(fee.Entrance.Id);
             return View(fee);
         }
 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(FeeResponseDto model)
-        {
-            if (!ModelState.IsValid)
-            {
-                await PopulateEntrancesDropdownAsync(model.Entrance.Id);
-                return View(model);
-            }
+        {           
 
             try
             {
-                // You must create or map a FeeDto from your model
+                var entrance = await _entranceService.GetEntranceByIdAsync(model.Entrance.Id);
+
                 var feeDto = new FeeDto
                 {
                     Name = model.Name,
@@ -97,7 +89,6 @@ namespace EntranceManager.Controllers
                     EntranceId = model.Entrance.Id,
                 };
 
-                // Pass both id and dto to the method
                 await _feesService.UpdateFeeAsync(model.Id, feeDto);
 
                 return RedirectToAction(nameof(Index));
@@ -109,6 +100,23 @@ namespace EntranceManager.Controllers
 
             await PopulateEntrancesDropdownAsync(model.Entrance.Id);
             return View(model);
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public async Task<IActionResult> Delete(int id)
+        {
+            try
+            {
+                await _feesService.DeleteFeeAsync(id);
+                TempData["SuccessMessage"] = "Таксата беше изтрита успешно.";
+            }
+            catch (Exception ex)
+            {
+                TempData["ErrorMessage"] = $"Грешка при изтриване: {ex.Message}";
+            }
+
+            return RedirectToAction(nameof(Index));
         }
 
 

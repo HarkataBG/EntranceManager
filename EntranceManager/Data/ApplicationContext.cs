@@ -50,6 +50,12 @@ namespace EntranceManager.Data
                 .HasForeignKey(af => af.FeeId)
                 .OnDelete(DeleteBehavior.Cascade);
 
+            modelBuilder.Entity<Apartment>()
+                .HasMany(a => a.ApartmentFees)
+                .WithOne(f => f.Apartment)
+                .HasForeignKey(f => f.ApartmentId)
+                .OnDelete(DeleteBehavior.Cascade);
+
             modelBuilder.Entity<ApartmentFee>()
                 .HasOne(af => af.Apartment)
                 .WithMany(a => a.ApartmentFees)
