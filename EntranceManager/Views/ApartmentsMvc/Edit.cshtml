@@ -2,7 +2,7 @@
 
 @{
     ViewData["Title"] = "Редакция на апартамент";
-    var entrances = ViewBag.Entrances as List<dynamic>;
+    var entrances = ViewBag.Entrances as IEnumerable<dynamic> ?? Enumerable.Empty<dynamic>();
 }
 
 <h2>@ViewData["Title"]</h2>
@@ -22,7 +22,7 @@
 
     <div class="mb-3">
         <label asp-for="EntranceId" class="form-label">Вход</label>
-        <select asp-for="EntranceId" class="form-select" id="entranceSelect" name="EntranceId">
+        <select asp-for="EntranceId" class="form-select" id="entranceSelect" name="EntranceId" required>
             <option value="">-- Изберете вход --</option>
             @foreach (var entrance in entrances)
             {
@@ -41,10 +41,10 @@
 
     <div class="mb-3">
         <label asp-for="OwnerUserId" class="form-label">Собственик</label>
-        <select asp-for="OwnerUserId" class="form-select" id="ownerSelect" name="OwnerUserId">
+        <select asp-for="OwnerUserId" class="form-select" id="ownerSelect" name="OwnerUserId" required>
             <option value="">-- Изберете собственик --</option>
             @{
-                var selectedEntrance = entrances?.FirstOrDefault(e => e.Id == Model.EntranceId);
+                var selectedEntrance = entrances.FirstOrDefault(e => e.Id == Model.EntranceId);
                 if (selectedEntrance != null && selectedEntrance.Residents != null)
                 {
                     foreach (var owner in selectedEntrance.Residents)

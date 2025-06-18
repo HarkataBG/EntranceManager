@@ -1,8 +1,15 @@
 ﻿@model IEnumerable<ApartmentResponseDto>
 
-<h2>Списък с апартаменти</h2>
+@{
+    ViewData["Title"] = "Списък с апартаменти";
+}
 
-<a asp-action="Create" class="btn btn-primary mb-2">Добави апартамент</a>
+<h2>@ViewData["Title"]</h2>
+
+@if (User.IsInRole("Administrator") || User.IsInRole("EntranceManager"))
+{
+    <a asp-action="Create" class="btn btn-primary mb-2">Добави апартамент</a>
+}
 
 <table class="table table-bordered">
     <thead>
@@ -10,6 +17,7 @@
             <th>Номер</th>
             <th>Вход</th>
             <th>Собственик</th>
+            <th>Данни за такси</th>
             <th></th>
         </tr>
     </thead>
@@ -21,11 +29,108 @@
                 <td>@apt.Entrance.EntranceName</td>
                 <td>@apt.Owner.Username</td>
                 <td>
-                    <a asp-action="Details" asp-route-id="@apt.Id">Детайли</a> |
-                    <a asp-action="Edit" asp-route-id="@apt.Id">Редакция</a> |
-                    <a asp-action="Delete" asp-route-id="@apt.Id">Изтриване</a>
+                    <button type="button"
+                            class="btn btn-info btn-sm view-fees-btn"
+                            data-bs-toggle="modal"
+                            data-bs-target="#feesModal"
+                            data-apartment-id="@apt.Id"
+                            data-fees='@Html.Raw(System.Text.Json.JsonSerializer.Serialize(apt.Fees))'>
+                        Виж такси (@(apt.Fees?.Count ?? 0))
+                    </button>
+                </td>
+                <td>
+                    <a asp-action="Details" asp-route-id="@apt.Id">Детайли</a>
+                    @if (User.IsInRole("Administrator") || User.IsInRole("EntranceManager"))
+                    {
+                        <text> | </text>
+                        <a asp-action="Edit" asp-route-id="@apt.Id">Редакция</a>
+                        <text> | </text>
+                        <a asp-action="Delete" asp-route-id="@apt.Id">Изтриване</a>
+                    }
                 </td>
             </tr>
         }
     </tbody>
 </table>
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="feesModal" tabindex="-1" aria-labelledby="feesModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="feesModalLabel">Такси на апартамент</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Затвори"></button>
+            </div>
+            <div class="modal-body">
+                <table class="table table-sm table-striped" id="feesTable">
+                    <thead>
+                        <tr>
+                            <th>Име</th>
+                            <th>Описание</th>
+                            <th>Сума</th>
+                            <th>Платено</th>
+                            <th>Дата на плащане</th>
+                            <th>Платена сума</th>
+                            <th>Действия</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Fee rows will be injected here -->
+                    </tbody>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Затвори</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var feesModal = document.getElementById('feesModal');
+            var feesTableBody = feesModal.querySelector('#feesTable tbody');
+
+            // Attach click event to all buttons with class 'view-fees-btn'
+            document.querySelectorAll('.view-fees-btn').forEach(function (button) {
+                button.addEventListener('click', function () {
+                    // Clear existing rows
+                    feesTableBody.innerHTML = '';
+
+                    // Parse fees data from data attribute
+                    var fees = JSON.parse(this.getAttribute('data-fees'));
+                    var apartmentId = this.getAttribute('data-apartment-id');
+
+                    if (fees && fees.length > 0) {
+                        fees.forEach(function (fee) {
+                            var row = document.createElement('tr');
+
+                            row.innerHTML = `
+                                        <td>${fee.Name}</td>
+                                        <td>${fee.Description}</td>
+                                        <td>${fee.Amount.toFixed(2)} лв.</td>
+                                        <td>${fee.IsPaid ? 'Да' : 'Не'}</td>
+                                        <td>${fee.PaymentDate ? new Date(fee.PaymentDate).toLocaleDateString() : '-'}</td>
+                                        <td>${fee.AmountAlreadyPaid.toFixed(2)} лв.</td>
+                                        <td>
+                                            <a href="/PaymentsMvc/Pay?apartmentId=${apartmentId}&feeId=${fee.FeeId}" class="btn btn-sm btn-primary">Плати</a>
+                                        </td>
+                                    `;
+
+                            feesTableBody.appendChild(row);
+                        });
+                    } else {
+                        var row = document.createElement('tr');
+                        var cell = document.createElement('td');
+                        cell.setAttribute('colspan', '7');
+                        cell.classList.add('text-center');
+                        cell.textContent = 'Няма налични такси.';
+                        row.appendChild(cell);
+                        feesTableBody.appendChild(row);
+                    }
+                });
+            });
+        });
+    </script>
+}

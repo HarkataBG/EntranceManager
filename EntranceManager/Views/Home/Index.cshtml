@@ -2,7 +2,144 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<style>
+   /* Container for entire page: vertical stack */
+.page-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 0rem;
+    box-sizing: border-box;
+    justify-content: center; /* vertical centering if content smaller */
+    align-items: center;
+    gap: 0rem;
+    text-align: center;
+    padding-top: 0.0rem; /* Reduced top padding to minimize blank space */
+}
+
+/* Top line: text container */
+.text-line {
+    max-width: 900px;
+    margin-top: 0;
+    padding-top: 0;
+}
+
+h1.display-4 {
+    font-size: 2.5rem;
+    margin-top: 0;    /* Remove top margin */
+    padding-top: 0;   /* Remove top padding */
+    margin-bottom: 0.5rem;
+}
+
+p.lead {
+    font-size: 1.1rem;
+    margin-top: 0;    /* Remove top margin */
+    padding-top: 0;   /* Remove top padding */
+    margin-bottom: 0;
+}
+
+.alert {
+    margin-top: 0.5rem;    /* Smaller space before welcome */
+    padding-top: 0.25rem;
+    font-size: 1rem;
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Second line: flex container with image and cards */
+.content-line {
+    display: flex;
+    gap: 3rem;
+    max-width: 900px;
+    width: 100%;
+    justify-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+
+/* Image styling */
+.logo-img {
+    max-width: 500px;
+    height: auto;
+    flex-shrink: 0;
+}
+
+/* Cards vertical stack */
+.cards-vertical {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    min-width: 280px;
+    max-height: 80vh;
+    overflow-y: auto; /* scroll only if really needed */
+}
+
+.card {
+    background-color: white;
+    box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
+    border-radius: 0.25rem;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    text-align: center;
+}
+
+.card-title {
+    font-weight: 600;
+    font-size: 1.3rem;
+    margin-bottom: 0.5rem;
+}
+
+.card-text {
+    flex-grow: 1;
+    font-size: 1rem;
+    color: #555;
+    margin-bottom: 1rem;
+}
+
+.btn-sm {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+}
+
+</style>
+
+<div class="page-container">
+    <!-- Line 1: Text -->
+    <div class="text-line">
+        <h1 class="display-4">EntranceManager - управление на жилищни входове</h1>
+        <p class="lead">Управлявайте лесно апартаменти, входове и такси с нашата интуитивна платформа.</p>
+
+        @if (User.Identity.IsAuthenticated)
+        {
+            <div class="alert alert-info">
+                Добре дошли, <strong>@User.Identity.Name</strong>!
+            </div>
+        }
+    </div>
+
+    <!-- Line 2: Image + Cards -->
+    <div class="content-line">
+        <img src="~/entrancemanager.png" alt="EntranceManager Logo" class="logo-img" />
+
+        <div class="cards-vertical">
+            <div class="card">
+                <div class="card-title">Апартаменти</div>
+                <div class="card-text">Управлявайте апартаментите във вашия вход.</div>
+                <a href="@Url.Action("Index", "ApartmentsMvc")" class="btn btn-primary btn-sm">Виж</a>
+            </div>
+            <div class="card">
+                <div class="card-title">Входове</div>
+                <div class="card-text">Прегледайте и управлявайте входовете.</div>
+                <a href="@Url.Action("Index", "EntrancesMvc")" class="btn btn-secondary btn-sm">Виж</a>
+            </div>
+            <div class="card">
+                <div class="card-title">Такси</div>
+                <div class="card-text">Добавяйте и редактирайте такси.</div>
+                <a href="@Url.Action("Index", "FeesMvc")" class="btn btn-success btn-sm">Виж</a>
+            </div>
+        </div>
+    </div>
 </div>

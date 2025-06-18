@@ -48,7 +48,21 @@ namespace AspNetCoreDemo.Helpers
                        Username = au.User.Username
                    })
                    .ToList() ?? new List<ResidentDto>(),
-               NumberOfChildren = apartment.NumberOfChildren,
+                Fees = apartment.ApartmentFees?
+                   .Select(af => new FeeSummaryDto
+                   {
+                       Id = af.Id,
+                       FeeId = af.FeeId,
+                       Name = af.Fee.Name,
+                       Description = af.Fee.Description,
+                       Amount = af.AmountForApartment, 
+                       IsPaid = af.IsPaid,
+                       PaymentDate = af.PaymentDate,
+                       AmountForApartment = af.AmountForApartment,
+                       AmountAlreadyPaid = af.AmountAlreadyPaid
+                   })
+                    .ToList() ?? new List<FeeSummaryDto>(),
+                NumberOfChildren = apartment.NumberOfChildren,
                NumberOfPets = apartment.NumberOfPets
             };
         }

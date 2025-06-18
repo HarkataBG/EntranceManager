@@ -1,0 +1,33 @@
+﻿@model IEnumerable<FeeResponseDto>
+
+<h2>Такси</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Добави нова такса</a>
+</p>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th>Име</th>
+            <th>Описание</th>
+            <th>Обща сума</th>
+            <th>Вход</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var fee in Model)
+        {
+            <tr>
+                <td>@fee.Name</td>
+                <td>@fee.Description</td>
+                <td>@fee.Amount</td>
+                <td>@fee.Entrance.EntranceName</td>
+                <td>
+                    <a asp-action="Edit" asp-route-id="@fee.Id" class="btn btn-info btn-sm">Актуализирай</a>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>

@@ -6,8 +6,10 @@ using EntranceManager.Services;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Localization;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Globalization;
 using System.Text;
 
 namespace EntranceManager
@@ -39,6 +41,18 @@ namespace EntranceManager
              {
                  options.LoginPath = "/AuthMvc/Login";
                  options.LogoutPath = "/AuthMvc/Logout";
+                 options.Events.OnRedirectToLogin = context =>
+                 {
+                     if (context.Request.Path.StartsWithSegments("/api") &&
+                         context.Response.StatusCode == 200)
+                     {
+                         context.Response.StatusCode = 401;
+                         return Task.CompletedTask;
+                     }
+
+                     context.Response.Redirect(context.RedirectUri);
+                     return Task.CompletedTask;
+                 };
              })
              .AddJwtBearer(options =>
              {
@@ -88,6 +102,15 @@ namespace EntranceManager
 
             app.UseStaticFiles();
 
+            var supportedCultures = new[] { new CultureInfo("en-US") };
+
+            app.UseRequestLocalization(new RequestLocalizationOptions
+            {
+                DefaultRequestCulture = new RequestCulture("en-US"),
+                SupportedCultures = supportedCultures,
+                SupportedUICultures = supportedCultures
+            });
+
             app.UseRouting();
 
             app.Use(async (context, next) =>
@@ -99,6 +122,18 @@ namespace EntranceManager
                 }
 
                 await next();
+            });
+
+            app.Use(async (context, next) =>
+            {
+                await next();
+
+                if (context.Response.StatusCode == 401 &&
+                    !context.Request.Path.StartsWithSegments("/api") &&
+                    !context.Response.HasStarted)
+                {
+                    context.Response.Redirect("/AuthMvc/Login");
+                }
             });
 
             app.UseAuthentication();

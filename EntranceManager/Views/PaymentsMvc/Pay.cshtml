@@ -1,0 +1,145 @@
+﻿@model EntranceManager.Models.Mappers.PaymentDto
+
+@{
+    ViewData["Title"] = "Плащане с кредитна карта";
+}
+
+<h2 class="mb-4">@ViewData["Title"]</h2>
+
+<form asp-controller="PaymentsMvc" asp-action="Pay" method="post" class="d-flex gap-4 flex-wrap" style="max-width: 900px; margin: auto;">
+    <input type="hidden" asp-for="ApartmentId" />
+    <input type="hidden" asp-for="FeeId" />
+    <input type="hidden" asp-for="PaymentMethod" value="CreditCard" />
+
+    <!-- Credit Card Visual Box (Left) -->
+    <div class="credit-card-box flex-shrink-0" style="width: 350px; height: 220px; border-radius: 20px; background: linear-gradient(135deg, #667eea, #764ba2); color: white; padding: 25px; box-shadow: 0 10px 30px rgba(102, 126, 234, 0.6); font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; position: relative;">
+        <div style="width: 60px; height: 40px; background: linear-gradient(135deg, #d4af37, #b8860b); border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); margin-bottom: 25px;"></div>
+        <div style="position: absolute; top: 20px; right: 25px; font-weight: 700; font-size: 1.6rem; font-family: 'Courier New', monospace; letter-spacing: 3px; opacity: 0.85;">VISA</div>
+
+        <div style="font-size: 1.1rem; letter-spacing: 2px; margin-bottom: 20px; min-height: 28px;" id="cardNumberDisplay">•••• •••• •••• ••••</div>
+        <div style="font-size: 0.9rem; margin-bottom: 10px;" id="cardHolderDisplay">Име на притежателя</div>
+        <div class="d-flex justify-content-between" style="font-size: 0.85rem;">
+            <div id="expiryDisplay">MM/YY</div>
+            <div id="cvvDisplay">CVV</div>
+        </div>
+    </div>
+
+    <!-- Payment Form Inputs (Right) -->
+    <div class="flex-grow-1" style="min-width: 300px;">
+        <div class="mb-3">
+            <label for="CardHolderName" class="form-label fw-semibold">Име на притежателя</label>
+            <input id="CardHolderName" name="CardHolderName" type="text" class="form-control rounded-3" placeholder="Ivan Ivanov" required />
+        </div>
+
+        <div class="mb-3">
+            <label for="CardNumber" class="form-label fw-semibold">Номер на карта</label>
+            <input id="CardNumber" name="CardNumber" type="text" maxlength="19" class="form-control rounded-3" placeholder="1234 5678 9012 3456" required />
+        </div>
+
+        <div class="d-flex gap-3 mb-3">
+            <div class="flex-fill">
+                <label for="ExpiryDate" class="form-label fw-semibold">Срок на валидност</label>
+                <input id="ExpiryDate" name="ExpiryDate" type="text" maxlength="5" class="form-control rounded-3" placeholder="MM/YY" required />
+            </div>
+            <div style="width: 100px;">
+                <label for="Cvv" class="form-label fw-semibold">CVV</label>
+                <input id="Cvv" name="Cvv" type="password" maxlength="4" class="form-control rounded-3" placeholder="123" required />
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label asp-for="Amount" class="form-label fw-semibold">Сума за плащане</label>
+            <input asp-for="Amount" class="form-control rounded-3" />
+            <span asp-validation-for="Amount" class="text-danger"></span>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-lg w-100 shadow-sm" style="font-weight:600; letter-spacing:1px;">
+            Плати
+        </button>
+    </div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        // Input masks and live card preview updates
+        const cardNumberInput = document.getElementById('CardNumber');
+        const cardHolderInput = document.getElementById('CardHolderName');
+        const expiryInput = document.getElementById('ExpiryDate');
+        const cvvInput = document.getElementById('Cvv');
+        const amountInput = document.getElementById('Amount');
+
+        const cardNumberDisplay = document.getElementById('cardNumberDisplay');
+        const cardHolderDisplay = document.getElementById('cardHolderDisplay');
+        const expiryDisplay = document.getElementById('expiryDisplay');
+        const cvvDisplay = document.getElementById('cvvDisplay');
+
+        if (cardNumberInput) {
+            cardNumberInput.addEventListener('input', function () {
+                let val = this.value.replace(/\D/g, '').substring(0, 16);
+                let formatted = val.match(/.{1,4}/g)?.join(' ') || '';
+                this.value = formatted;
+                if (cardNumberDisplay) {
+                    cardNumberDisplay.textContent = formatted || '•••• •••• •••• ••••';
+                }
+            });
+        }
+
+        if (cardHolderInput) {
+            cardHolderInput.addEventListener('input', function () {
+                if (cardHolderDisplay) {
+                    cardHolderDisplay.textContent = this.value.toUpperCase() || 'Име на притежателя';
+                }
+            });
+        }
+
+        if (expiryInput) {
+            expiryInput.addEventListener('input', function () {
+                let val = this.value.replace(/\D/g, '').substring(0, 4);
+                if (val.length > 2) {
+                    this.value = val.substring(0, 2) + '/' + val.substring(2);
+                } else {
+                    this.value = val;
+                }
+                if (expiryDisplay) {
+                    expiryDisplay.textContent = this.value || 'MM/YY';
+                }
+            });
+        }
+
+        if (cvvInput) {
+            cvvInput.addEventListener('input', function () {
+                if (cvvDisplay) {
+                    cvvDisplay.textContent = this.value || 'CVV';
+                }
+            });
+        }
+
+        // Amount input validation and formatting
+        if (amountInput) {
+            amountInput.addEventListener('input', function () {
+                // Replace comma with dot for consistent decimal separator
+                let val = this.value.replace(',', '.');
+
+                // Allow only numbers and one decimal point with up to 2 decimals
+                if (!/^\d*\.?\d{0,2}$/.test(val)) {
+                    // Invalid input, remove last character
+                    val = val.slice(0, -1);
+                }
+
+                this.value = val;
+            });
+
+            amountInput.addEventListener('blur', function () {
+                // Format to 2 decimals on blur if valid number
+                let val = parseFloat(this.value.replace(',', '.'));
+                if (!isNaN(val)) {
+                    this.value = val.toFixed(2);
+                } else {
+                    this.value = '';
+                }
+            });
+        }
+    </script>
+}

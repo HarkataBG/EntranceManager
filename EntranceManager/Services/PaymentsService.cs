@@ -25,6 +25,12 @@ namespace EntranceManager.Services
             if (dto.Amount <= 0 || dto.Amount > apartmentFee.AmountForApartment)
                 throw new InvalidOperationException("Sum is not valid");
 
+            var existingTotalPaid = apartmentFee.Payments.Sum(p => p.AmountPaid);
+            var totalPaid = existingTotalPaid + dto.Amount;
+
+            if (totalPaid > apartmentFee.AmountForApartment)
+                throw new InvalidOperationException("This payment would overpay the fee.");
+
             var payment = new Payment
             {
                 ApartmentFeeId = apartmentFee.Id,
@@ -35,16 +41,15 @@ namespace EntranceManager.Services
 
             await _paymentRepository.AddPaymentAsync(payment);
 
-            var totalPaid = apartmentFee.Payments.Sum(p => p.AmountPaid) + dto.Amount;
+            apartmentFee.AmountAlreadyPaid = totalPaid;
 
             if (totalPaid >= apartmentFee.AmountForApartment)
             {
                 apartmentFee.IsPaid = true;
                 apartmentFee.PaymentDate = DateTime.UtcNow;
             }
-                apartmentFee.AmountAlreadyPaid = totalPaid;
-                await _paymentRepository.UpdateApartmentFeeAsync(apartmentFee);
-            
+
+            await _paymentRepository.UpdateApartmentFeeAsync(apartmentFee);
         }
     }
 }

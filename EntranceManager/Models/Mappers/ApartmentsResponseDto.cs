@@ -11,6 +11,8 @@
         public EntranceSummaryDto Entrance { get; set; }
         public List<ResidentDto> Residents { get; set; }
 
+        public List<FeeSummaryDto> Fees { get; set; }
+
         public int NumberOfChildren { get; set; }
         public int NumberOfPets { get; set; }
     }

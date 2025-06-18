@@ -1,0 +1,13 @@
+﻿@model EntranceResponseDto
+
+<h2>Изтрий вход</h2>
+
+<div>
+    <h4>Сигурни ли сте, че искате да изтриете вход: <strong>@Model.EntranceName</strong>?</h4>
+
+    <form asp-action="DeleteConfirmed" method="post">
+        <input type="hidden" asp-for="Id" />
+        <button type="submit" class="btn btn-danger">Изтрий</button>
+        <a asp-action="Index" class="btn btn-secondary">Отказ</a>
+    </form>
+</div>

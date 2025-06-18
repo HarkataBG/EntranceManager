@@ -4,6 +4,7 @@ using EntranceManager.Services;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace EntranceManager.Controllers.Mvc
 {
@@ -11,11 +12,13 @@ namespace EntranceManager.Controllers.Mvc
     public class ApartmentsMvcController : Controller
     {
         private readonly IApartmentService _apartmentService;
+        private readonly IEntranceService _entranceService;
         private readonly IUsersService _usersService;
 
-        public ApartmentsMvcController(IApartmentService apartmentService, IUsersService usersService)
+        public ApartmentsMvcController(IApartmentService apartmentService, IEntranceService entranceService, IUsersService usersService)
         {
             _apartmentService = apartmentService;
+            _entranceService = entranceService;
             _usersService = usersService;
         }
 
@@ -34,25 +37,107 @@ namespace EntranceManager.Controllers.Mvc
             return View(apartment);
         }
 
-        [Authorize(Roles = "Administrator,EntranceManager")]
-        public IActionResult Create() => View();
+
+        [Authorize]
+        public async Task<IActionResult> Create()
+        {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
+            var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
+            var usersWithEntrance = entrances
+            .SelectMany(e => e.Residents.Select(u => new
+            {
+                User = u,
+                EntranceId = e.Id,
+                EntranceName = e.EntranceName
+            }))
+            .ToList();
+
+            ViewBag.Entrances = entrances.Select(e => new SelectListItem
+            {
+                Value = e.Id.ToString(),
+                Text = e.EntranceName
+            }).ToList();
+
+            ViewBag.Users = usersWithEntrance.Select(x => new SelectListItem
+            {
+                Value = x.User.Id.ToString(),
+                Text = x.User.Username,
+                Group = new SelectListGroup { Name = x.EntranceId.ToString() } 
+            }).ToList();
+
+            return View();
+        }
 
         [HttpPost]
         [Authorize(Roles = "Administrator,EntranceManager")]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create(ApartmentDto dto)
         {
-            if (!ModelState.IsValid) return View(dto);
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
 
-            await _usersService.GetAuthorizedUserForEntranceAsync(User, dto.EntranceId);
+            if (!ModelState.IsValid)
+            {
+                // Repopulate entrances and users for the dropdowns because the view needs them on validation errors
+                var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
+                var usersWithEntrance = entrances
+                    .SelectMany(e => e.Residents.Select(u => new
+                    {
+                        User = u,
+                        EntranceId = e.Id,
+                        EntranceName = e.EntranceName
+                    }))
+                    .ToList();
+
+                ViewBag.Entrances = entrances.Select(e => new SelectListItem
+                {
+                    Value = e.Id.ToString(),
+                    Text = e.EntranceName
+                }).ToList();
+
+                ViewBag.Users = usersWithEntrance.Select(x => new SelectListItem
+                {
+                    Value = x.User.Id.ToString(),
+                    Text = x.User.Username,
+                    Group = new SelectListGroup { Name = x.EntranceId.ToString() }
+                }).ToList();
+
+                return View(dto);
+            }
+
             await _apartmentService.AddApartmentAsync(dto);
-            return RedirectToAction(nameof(Index));
+
+            return RedirectToAction("Index");
         }
 
         [Authorize(Roles = "Administrator,EntranceManager")]
         public async Task<IActionResult> Edit(int id)
         {
+            var username = User.Identity?.Name;
+            if (string.IsNullOrEmpty(username))
+                throw new UnauthorizedAccessException("User is not authenticated.");
+
             var apt = await _apartmentService.GetApartmentByIdAsync(id);
             if (apt == null) return NotFound();
+
+            var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
+            if (entrances == null)
+            {
+                ViewBag.Entrances = new List<object>();
+            }
+            else
+            {
+                ViewBag.Entrances = entrances.Select(e => new
+                {
+                    e.Id,
+                    e.EntranceName,
+                    Residents = e.Residents.Select(r => new { r.Id, r.Username }).ToList()
+                }).ToList();
+            }
 
             return View(new ApartmentDto
             {
