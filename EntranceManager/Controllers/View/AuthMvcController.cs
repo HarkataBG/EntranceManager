@@ -56,5 +56,37 @@ namespace EntranceManager.Controllers.Mvc
             Response.Cookies.Delete("auth_token");
             return RedirectToAction("Login");
         }
+
+        [HttpGet]
+        public IActionResult Register()
+        {
+            return View();
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> Register(RegisterDto registerDto)
+        {
+            if (!ModelState.IsValid)
+            {
+                return View(registerDto);
+            }
+
+            var json = JsonConvert.SerializeObject(registerDto);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+            var response = await _httpClient.PostAsync("https://localhost:7145/api/auth/register", content);
+
+            if (response.IsSuccessStatusCode)
+            {
+                // Registration successful, redirect to login page
+                return RedirectToAction("Login");
+            }
+
+            // Read error message from API response (e.g., "User already exists.")
+            var errorMessage = await response.Content.ReadAsStringAsync();
+            ViewBag.Error = errorMessage;
+
+            return View(registerDto);
+        }
     }
 }

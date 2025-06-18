@@ -1,13 +1,13 @@
 ﻿@model ApartmentDto
 
 @{
-    ViewData["Title"] = "Редакция на апартамент";
+    ViewData["Title"] = "Създаване на апартамент";
     var entrances = ViewBag.Entrances as List<dynamic>;
 }
 
 <h2>@ViewData["Title"]</h2>
 
-<form asp-action="Edit" method="post" class="mt-4">
+<form asp-action="Create" method="post" class="mt-4">
     <div class="mb-3">
         <label asp-for="Floor" class="form-label">Етаж</label>
         <input asp-for="Floor" class="form-control" />
@@ -24,16 +24,16 @@
         <label asp-for="EntranceId" class="form-label">Вход</label>
         <select asp-for="EntranceId" class="form-select" id="entranceSelect" name="EntranceId">
             <option value="">-- Изберете вход --</option>
-            @foreach (var entrance in entrances)
+            @if (ViewBag.Entrances != null)
             {
-                if (entrance.Id == Model.EntranceId)
+                foreach (var entrance in (List<SelectListItem>)ViewBag.Entrances)
                 {
-                    <option value="@entrance.Id" selected="selected">@entrance.EntranceName</option>
+                    <option value="@entrance.Value">@entrance.Text</option>
                 }
-                else
-                {
-                    <option value="@entrance.Id">@entrance.EntranceName</option>
-                }
+            }
+            else
+            {
+                <option disabled>Няма налични входове</option>
             }
         </select>
         <span asp-validation-for="EntranceId" class="text-danger"></span>
@@ -43,23 +43,7 @@
         <label asp-for="OwnerUserId" class="form-label">Собственик</label>
         <select asp-for="OwnerUserId" class="form-select" id="ownerSelect" name="OwnerUserId">
             <option value="">-- Изберете собственик --</option>
-            @{
-                var selectedEntrance = entrances?.FirstOrDefault(e => e.Id == Model.EntranceId);
-                if (selectedEntrance != null && selectedEntrance.Residents != null)
-                {
-                    foreach (var owner in selectedEntrance.Residents)
-                    {
-                        if (owner.Id == Model.OwnerUserId)
-                        {
-                            <option value="@owner.Id" selected="selected">@owner.Username</option>
-                        }
-                        else
-                        {
-                            <option value="@owner.Id">@owner.Username</option>
-                        }
-                    }
-                }
-            }
+            @* Initially empty, will be populated by JS on entrance selection *@
         </select>
         <span asp-validation-for="OwnerUserId" class="text-danger"></span>
     </div>
@@ -76,7 +60,7 @@
         <span asp-validation-for="NumberOfPets" class="text-danger"></span>
     </div>
 
-    <button type="submit" class="btn btn-primary">Запази</button>
+    <button type="submit" class="btn btn-primary">Създай</button>
     <a asp-action="Index" class="btn btn-secondary ms-2">Отказ</a>
 </form>
 

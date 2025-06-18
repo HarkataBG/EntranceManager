@@ -50,7 +50,10 @@
                 var dto = new EntranceDto
                 {
                     EntranceName = entrance.EntranceName,
-                    Address = entrance.Address
+                    Address = entrance.Address,
+                    City = entrance.City,
+                    PostCode = entrance.PostCode,
+                    CountChildrenAsResidents = entrance.CountChildrenAsResidents
                 };
 
                 return View(dto);
@@ -66,18 +69,10 @@
                 return RedirectToAction(nameof(Index));
             }
 
+            [HttpPost]
             [Authorize(Roles = "Administrator")]
+            [ValidateAntiForgeryToken]
             public async Task<IActionResult> Delete(int id)
-            {
-                var entrance = await _entranceService.GetEntranceByIdAsync(id);
-                if (entrance == null) return NotFound();
-
-                return View(entrance);
-            }
-
-            [HttpPost, ActionName("Delete")]
-            [Authorize(Roles = "Administrator")]
-            public async Task<IActionResult> DeleteConfirmed(int id)
             {
                 await _entranceService.DeleteEntranceAsync(id);
                 return RedirectToAction(nameof(Index));

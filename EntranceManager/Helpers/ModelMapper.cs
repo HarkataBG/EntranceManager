@@ -88,6 +88,7 @@ namespace AspNetCoreDemo.Helpers
                 Id = entrance.Id,
                 City = entrance.City,
                 Address = entrance.Address,
+                PostCode = entrance.PostCode,
                 EntranceName = entrance.EntranceName,
                 CountChildrenAsResidents = entrance.CountChildrenAsResidents,
 

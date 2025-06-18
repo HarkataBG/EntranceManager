@@ -1,34 +1,69 @@
-﻿@model IEnumerable<EntranceResponseDto>
+﻿@model IEnumerable<EntranceManager.Models.Mappers.EntranceResponseDto>
 
-<h2>Входове</h2>
+@{
+    ViewData["Title"] = "Входове";
+}
 
-<table class="table">
+<h2>@ViewData["Title"]</h2>
+
+<p>
+    <a asp-action="Create" class="btn btn-success">Добави нов вход</a>
+</p>
+
+<table class="table table-striped">
     <thead>
         <tr>
-            <th>Име</th>
+            <th>Име на входа</th>
+            <th>Град</th>
             <th>Адрес</th>
-            <th>Действия</th>
+            <th>Пощенски код</th>
+            <th>Брой деца като жители</th>
+            <th>Домоуправител</th>
+            <th></th>
         </tr>
     </thead>
     <tbody>
-        @foreach (var entrance in Model)
+        @if (Model != null && Model.Any())
+        {
+            foreach (var entrance in Model)
+            {
+                <tr>
+                    <td>@entrance.EntranceName</td>
+                    <td>@entrance.City</td>
+                    <td>@entrance.Address</td>
+                    <td>@entrance.PostCode</td>
+                    <td>
+                        @(entrance.CountChildrenAsResidents ? "Да" : "Не")
+                    </td>
+                    <td>
+                        @{
+                            var username = entrance.Manager?.Username;
+                            if (string.IsNullOrWhiteSpace(username))
+                            {
+                                <text>Все още няма избран домоуправител</text>
+                            }
+                            else
+                            {
+                                <text>@username</text>
+                            }
+                        }
+                    </td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@entrance.Id" class="btn btn-primary btn-sm">Редактирай</a>
+                        <form asp-action="Delete" asp-route-id="@entrance.Id" method="post" style="display:inline;"
+                              onsubmit="return confirm('Сигурни ли сте, че искате да изтриете този вход?');">
+                            <button type="submit" class="btn btn-danger btn-sm ms-1">Изтрий</button>
+                        </form>
+                    </td>
+                   
+                </tr>
+            }
+        }
+        else
         {
             <tr>
-                <td>@entrance.EntranceName</td>
-                <td>@entrance.Address</td>
-                <td>
-                    @if (User.IsInRole("Administrator"))
-                    {
-                        <a asp-action="Edit" asp-route-id="@entrance.Id" class="btn btn-warning btn-sm">Редактирай</a>
-                        <a asp-action="Delete" asp-route-id="@entrance.Id" class="btn btn-danger btn-sm">Изтрий</a>
-                    }
-                </td>
+                <td colspan="6" class="text-center">Няма налични входове.</td>
             </tr>
         }
     </tbody>
 </table>
-
-@if (User.IsInRole("Administrator"))
-{
-    <a asp-action="Create" class="btn btn-primary">Създай нов вход</a>
-}

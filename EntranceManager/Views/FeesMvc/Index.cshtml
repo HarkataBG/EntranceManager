@@ -2,9 +2,12 @@
 
 <h2>Такси</h2>
 
-<p>
-    <a asp-action="Create" class="btn btn-success">Добави нова такса</a>
-</p>
+@if (User.IsInRole("Administrator") || User.IsInRole("EntranceManager"))
+{
+    <p>
+        <a asp-action="Create" class="btn btn-success">Добави нова такса</a>
+    </p>
+}
 
 <table class="table">
     <thead>

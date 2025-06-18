@@ -46,14 +46,6 @@ namespace EntranceManager.Controllers.Mvc
                 throw new UnauthorizedAccessException("User is not authenticated.");
 
             var entrances = await _entranceService.GetAllEntrancesDetailsAsync(username);
-            var usersWithEntrance = entrances
-            .SelectMany(e => e.Residents.Select(u => new
-            {
-                User = u,
-                EntranceId = e.Id,
-                EntranceName = e.EntranceName
-            }))
-            .ToList();
 
             ViewBag.Entrances = entrances.Select(e => new SelectListItem
             {
@@ -61,11 +53,11 @@ namespace EntranceManager.Controllers.Mvc
                 Text = e.EntranceName
             }).ToList();
 
-            ViewBag.Users = usersWithEntrance.Select(x => new SelectListItem
+            ViewBag.EntrancesData = entrances.Select(e => new
             {
-                Value = x.User.Id.ToString(),
-                Text = x.User.Username,
-                Group = new SelectListGroup { Name = x.EntranceId.ToString() } 
+                e.Id,
+                e.EntranceName,
+                Residents = e.Residents.Select(r => new { r.Id, r.Username }).ToList()
             }).ToList();
 
             return View();
@@ -97,14 +89,14 @@ namespace EntranceManager.Controllers.Mvc
                 {
                     Value = e.Id.ToString(),
                     Text = e.EntranceName
-                }).ToList();
+                }).ToList() ?? new List<SelectListItem>();
 
                 ViewBag.Users = usersWithEntrance.Select(x => new SelectListItem
                 {
                     Value = x.User.Id.ToString(),
                     Text = x.User.Username,
                     Group = new SelectListGroup { Name = x.EntranceId.ToString() }
-                }).ToList();
+                }).ToList() ?? new List<SelectListItem>(); ;
 
                 return View(dto);
             }
