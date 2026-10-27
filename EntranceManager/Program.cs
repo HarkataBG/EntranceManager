@@ -3,6 +3,7 @@ using EntranceManager.Data;
 using EntranceManager.Repositories;
 using EntranceManager.Repositories.Contracts;
 using EntranceManager.Services;
+using EntranceManager.Services.AI;
 using EntranceManager.Services.Contracts;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -84,11 +85,19 @@ namespace EntranceManager
             builder.Services.AddScoped<IUsersService, UsersService>();
             builder.Services.AddScoped<IFeesService, FeesService>();
             builder.Services.AddScoped<IPaymentsService, PaymentsService>();
+            builder.Services.AddScoped<IEntranceFinancialService, EntranceFinancialService>();
 
             //Helpers
             builder.Services.AddScoped<ModelMapper>();
 
             builder.Services.AddHttpClient();
+            builder.Services.AddHttpClient<IAIService, OpenAIService>(client =>
+            {
+                client.BaseAddress = new Uri("https://api.openai.com/");
+                client.Timeout = TimeSpan.FromSeconds(
+                    builder.Configuration.GetValue<int?>(
+                        "OpenAI:RequestTimeoutSeconds") ?? 60);
+            });
 
             var app = builder.Build();
 

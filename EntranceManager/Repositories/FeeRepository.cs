@@ -38,6 +38,32 @@ namespace EntranceManager.Repositories
             };           
         }
 
+        public async Task<IEnumerable<Fee>> GetAllFinancialDetailsAsync(User currentUser)
+        {
+            IQueryable<Fee> query = _dbContext.Fees
+                .AsNoTracking()
+                .Include(fee => fee.Entrance)
+                .Include(fee => fee.ApartmentFees)
+                    .ThenInclude(apartmentFee => apartmentFee.Apartment)
+                .Include(fee => fee.ApartmentFees)
+                    .ThenInclude(apartmentFee => apartmentFee.Payments);
+
+            return currentUser.Role switch
+            {
+                nameof(UserRole.Administrator) =>
+                    await query.ToListAsync(),
+
+                nameof(UserRole.EntranceManager) =>
+                    await query
+                        .Where(fee => currentUser.ManagedEntrances
+                            .Select(entrance => entrance.Id)
+                            .Contains(fee.EntranceId))
+                        .ToListAsync(),
+
+                _ => new List<Fee>()
+            };
+        }
+
         public async Task<Fee> GetFeeDetailsByIdAsync(int id)
         {
             return await _dbContext.Fees

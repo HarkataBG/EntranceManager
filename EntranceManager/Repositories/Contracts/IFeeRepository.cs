@@ -6,6 +6,7 @@ namespace EntranceManager.Repositories.Contracts
     public interface IFeeRepository
     {
         Task<IEnumerable<Fee>> GetAllFeeDetailsAsync(User currentUser);
+        Task<IEnumerable<Fee>> GetAllFinancialDetailsAsync(User currentUser);
         Task<Fee> GetFeeDetailsByIdAsync(int id);
         Task<Fee> GetByIdAsync(int id);
         Task<Fee> GetByNameAsync(string name, int entranceId);
