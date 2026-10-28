@@ -1,4 +1,5 @@
 using AspNetCoreDemo.Helpers;
+using EntranceManager.Configuration;
 using EntranceManager.Data;
 using EntranceManager.Repositories;
 using EntranceManager.Repositories.Contracts;
@@ -91,12 +92,29 @@ namespace EntranceManager
             builder.Services.AddScoped<ModelMapper>();
 
             builder.Services.AddHttpClient();
-            builder.Services.AddHttpClient<IAIService, OpenAIService>(client =>
+
+            //builder.Services.Configure<OpenAIOptions>(
+            //builder.Configuration.GetSection("OpenAI"));
+
+            //builder.Services.AddHttpClient<IAIService, OpenAIService>(client =>
+            //{
+            //    client.BaseAddress = new Uri("https://api.openai.com/");
+            //    client.Timeout = TimeSpan.FromSeconds(
+            //        builder.Configuration.GetValue<int?>(
+            //            "OpenAI:RequestTimeoutSeconds") ?? 60);
+            //});
+
+            builder.Services.Configure<GeminiOptions>(
+            builder.Configuration.GetSection("Gemini"));
+
+            builder.Services.AddHttpClient<IAIService, GeminiAIService>(client =>
             {
-                client.BaseAddress = new Uri("https://api.openai.com/");
+                client.BaseAddress = new Uri(
+                    "https://generativelanguage.googleapis.com/");
+
                 client.Timeout = TimeSpan.FromSeconds(
                     builder.Configuration.GetValue<int?>(
-                        "OpenAI:RequestTimeoutSeconds") ?? 60);
+                        "Gemini:RequestTimeoutSeconds") ?? 60);
             });
 
             var app = builder.Build();
